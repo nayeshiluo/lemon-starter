@@ -1,6 +1,6 @@
-# 🤖 Hermes Agent 自动化一键安装套件 (Starter Edition)
+# 🤖 Hermes Agent 自动化一键安装套件 (含 Web UI 网页管理面板)
 
-本仓库提供 Hermes Agent 的纯净、自动化一键安装脚本与完整扩展技能树，支持自定义任何 OpenAI 兼容的模型 URL 端点与 API Key，并可快速接入 Telegram Bot。
+本套件提供 Hermes Agent 的自动化一键安装脚本、完整技能树（Skills）以及 **Web UI 网页控制台（端口 8648）**。支持自定义任何 OpenAI 兼容的模型 URL 端点与 API Key，并可快速绑定 Telegram Bot。
 
 ---
 
@@ -20,21 +20,34 @@ bash <(curl -fsSL https://raw.githubusercontent.com/nayeshiluo/lemon-starter/mai
 
 ---
 
-## 🛠️ 安装过程配置说明
+## 🌐 Web UI 网页管理面板
 
-运行安装脚本后，会自动完成环境依赖安装与技能树注入，并进入交互式配置向导：
+安装脚本会自动部署并启动 **Hermes Web UI** 控制台：
+
+- **面板地址**：`http://<你的服务器IP>:8648`
+- **默认管理员账号**：`admin`
+- **默认管理员密码**：`123456` *(首次登录后请在后台安全设置中修改)*
+- **功能特性**：网页端实时多轮对话、技能市场与配置管理、会话历史树、模型网关状态监控等。
+
+> ⚠️ **注意**：如果使用的是云服务器（如 AWS、阿里云、腾讯云等），请在云控制台的安全组规则中**放行入站 TCP 8648 端口**。
+
+---
+
+## 🛠️ 安装过程交互说明
+
+运行安装脚本后，终端会自动进入配置向导：
 
 1. **模型名称**（如 `deepseek-chat` / `gpt-4o` / `claude-3-5-sonnet`）
 2. **模型 Base URL**（如 `https://api.deepseek.com/v1` 或你自己的中转站 / OpenAI 兼容端点）
 3. **模型 API Key**（`sk-xxxxxxxx`）
-4. **Telegram Bot Token**（可选，直接在终端使用可回车跳过）
+4. **Telegram Bot Token**（可选，直接在终端/网页使用可回车跳过）
 5. **Telegram 管理员 User ID**（可选）
 
 ---
 
-## ⚙️ 非交互式（静默自动化安装）
+## ⚙️ 自动化非交互式批量安装
 
-如果你想通过脚本批量部署，可以在运行前注入环境变量：
+可以通过预设环境变量实现无人值守静默安装：
 
 ```bash
 export MODEL_NAME="deepseek-chat"
@@ -48,10 +61,10 @@ curl -fsSL https://raw.githubusercontent.com/nayeshiluo/lemon-starter/main/insta
 
 ---
 
-## 💬 常用指令
+## 💬 常用运维命令
 
-- 启动终端交互：`hermes`
-- 检查系统状态：`hermes doctor`
-- 单次查询提问：`hermes chat -q "你好，请介绍一下你自己"`
-- 重启 Telegram 网关：`sudo systemctl restart hermes-gateway`
-- 查看网关日志：`sudo journalctl -u hermes-gateway -f`
+- **进入终端交互**：`hermes`
+- **重启 Web UI 面板**：`hermes-web-ui restart`
+- **重启 Telegram 网关**：`sudo systemctl restart hermes-gateway`
+- **查看网关运行日志**：`sudo journalctl -u hermes-gateway -f`
+- **系统健康体检**：`hermes doctor`
