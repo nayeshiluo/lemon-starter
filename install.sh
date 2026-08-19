@@ -19,10 +19,22 @@ else
   SUDO=""
 fi
 
-# 1. 安装基础依赖与 Node.js (用于 Web-UI 网页控制面板)
-echo ">> [1/6] 安装系统依赖与 Node.js 运行环境..."
+# 1. 自动为低内存机器创建 Swap (防止 512MB/1GB NAT 小鸡 OOM 崩溃)
+TOTAL_MEM="$(free -m | awk '/Mem:/ {print $2}')"
+if [ "$TOTAL_MEM" -lt 1500 ] && [ ! -f /swapfile ] && [ "$(free -m | awk '/Swap:/ {print $2}')" -eq 0 ]; then
+  echo ">> 检测到内存较小 (${TOTAL_MEM}MB)，正在创建 1GB 虚拟内存 (Swap)..."
+  $SUDO fallocate -l 1G /swapfile 2>/dev/null || $SUDO dd if=/dev/zero of=/swapfile bs=1M count=1024 2>/dev/null
+  $SUDO chmod 600 /swapfile
+  $SUDO mkswap /swapfile >/dev/null 2>&1
+  $SUDO swapon /swapfile >/dev/null 2>&1
+  echo '/swapfile none swap sw 0 0' | $SUDO tee -a /etc/fstab >/dev/null
+  echo "  ✓ 1GB Swap 启用成功"
+fi
+
+# 2. 安装基础依赖与 xz-utils, Node.js
+echo ">> [1/6] 安装系统依赖 (curl, git, xz-utils, sqlite3, systemd)..."
 $SUDO apt-get update -y
-$SUDO apt-get install -y curl git tar gzip sqlite3 ca-certificates jq systemd openssl
+$SUDO apt-get install -y curl git tar gzip xz-utils sqlite3 ca-certificates jq systemd openssl
 
 if ! command -v node &>/dev/null || [ "$(node -v | cut -d. -f1 | tr -d 'v')" -lt 20 ]; then
   echo "安装 Node.js 22.x..."
@@ -30,18 +42,25 @@ if ! command -v node &>/dev/null || [ "$(node -v | cut -d. -f1 | tr -d 'v')" -lt
   $SUDO apt-get install -y nodejs
 fi
 
-# 2. 安装 Hermes Agent 官方核心
+# 3. 安装 Hermes Agent 官方核心
 echo ">> [2/6] 安装 Hermes Agent 核心与 Python/uv 环境..."
-su - "$TARGET_USER" -c 'curl -fsSL https://hermes-agent.nousresearch.com/install.sh | bash'
+if [ "$TARGET_USER" = "root" ]; then
+  curl -fsSL https://hermes-agent.nousresearch.com/install.sh | bash
+else
+  su - "$TARGET_USER" -c 'curl -fsSL https://hermes-agent.nousresearch.com/install.sh | bash'
+fi
 
-# 3. 安装 Hermes Web UI 网页管理面板
-echo ">> [3/6] 安装 Hermes Web UI 网页控制台..."
-$SUDO npm install -g --allow-scripts=agent-browser,node-pty,vue-demi hermes-web-ui@latest || true
+# 确保环境变量
+export PATH="$USER_HOME/.local/bin:/usr/local/bin:$PATH"
 
 H="$USER_HOME/.hermes"
 mkdir -p "$H" "$H/skills"
 
-# 4. 部署全量扩展技能树
+# 4. 安装 Hermes Web UI 网页控制台
+echo ">> [3/6] 安装 Hermes Web UI 网页控制台..."
+$SUDO npm install -g --allow-scripts=agent-browser,node-pty,vue-demi hermes-web-ui@latest || true
+
+# 5. 部署全量扩展技能树
 echo ">> [4/6] 部署扩展技能树 (Skills)..."
 SKILLS_URL="https://raw.githubusercontent.com/nayeshiluo/lemon-starter/main/skills_bundle.tar.gz"
 if curl -fsSL "$SKILLS_URL" -o "$WORKDIR/skills.tar.gz" 2>/dev/null; then
@@ -49,7 +68,7 @@ if curl -fsSL "$SKILLS_URL" -o "$WORKDIR/skills.tar.gz" 2>/dev/null; then
   echo "  ✓ 技能树注入完成"
 fi
 
-# 5. 交互式配置向导 (支持从 /dev/tty 读取，兼容 curl | bash)
+# 6. 交互式配置向导 (支持从 /dev/tty 读取，兼容 curl | bash)
 echo ""
 echo "=========================================================="
 echo "          🛠️ 大模型、网页端与通信渠道配置"
@@ -113,7 +132,7 @@ if [ -n "$CFG_TG_TOKEN" ] && [ -z "$CFG_TG_ADMIN" ]; then
   prompt_input "5. 请输入你的 Telegram 纯数字 User ID (作为管理员)" "" CFG_TG_ADMIN
 fi
 
-# 6. 生成配置文件
+# 7. 生成配置文件
 echo ">> [5/6] 写入配置与环境变量..."
 
 API_SERVER_KEY="$(openssl rand -hex 16)"
@@ -175,7 +194,7 @@ fi
 chown -R "$TARGET_USER:$TARGET_USER" "$H"
 chmod 700 "$H"
 
-# 7. 配置守护进程并启动 (Gateway + Web-UI)
+# 8. 配置守护进程并启动 (Gateway + Web-UI)
 echo ">> [6/6] 注册 Systemd 守护进程并启动服务..."
 
 cat <<EOF | $SUDO tee /etc/systemd/system/hermes-gateway.service >/dev/null
@@ -188,25 +207,31 @@ Wants=network-online.target
 Type=simple
 User=$TARGET_USER
 WorkingDirectory=$USER_HOME
-ExecStart=$USER_HOME/.local/bin/hermes gateway
+ExecStart=/usr/local/bin/hermes gateway
 Restart=always
 RestartSec=5
 Environment=HOME=$USER_HOME
-Environment=PATH=$USER_HOME/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+Environment=PATH=$USER_HOME/.local/bin:/usr/local/bin:/usr/local/sbin:/usr/sbin:/usr/bin:/sbin:/bin
 
 [Install]
 WantedBy=multi-user.target
 EOF
 
 $SUDO systemctl daemon-reload
-$SUDO systemctl enable --now hermes-gateway 2>/dev/null || true
+if [ -n "$CFG_TG_TOKEN" ]; then
+  $SUDO systemctl enable --now hermes-gateway 2>/dev/null || true
+fi
 
 # 启动 Web UI 控制面板
-su - "$TARGET_USER" -c 'hermes-web-ui stop 2>/dev/null || true'
-su - "$TARGET_USER" -c 'hermes-web-ui start 2>/dev/null || true'
+if [ "$TARGET_USER" = "root" ]; then
+  hermes-web-ui stop 2>/dev/null || true
+  hermes-web-ui start 2>/dev/null || true
+else
+  su - "$TARGET_USER" -c 'hermes-web-ui stop 2>/dev/null || true'
+  su - "$TARGET_USER" -c 'hermes-web-ui start 2>/dev/null || true'
+fi
 
-# 获取服务器公网 IP
-SERVER_IP="$(curl -s --connect-timeout 3 https://api.ipify.org || echo "你的服务器IP")"
+SERVER_IP="$(curl -s --connect-timeout 3 https://api.ipify.org || echo "103.69.129.103")"
 
 echo ""
 echo "=========================================================="
