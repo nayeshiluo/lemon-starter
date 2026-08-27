@@ -132,8 +132,8 @@ if [ -n "$CFG_TG_TOKEN" ] && [ -z "$CFG_TG_ADMIN" ]; then
   prompt_input "5. 请输入你的 Telegram 纯数字 User ID (作为管理员)" "" CFG_TG_ADMIN
 fi
 
-# 7. 生成配置文件
-echo ">> [5/6] 写入配置与环境变量..."
+# 7. 生成配置文件与默认人设
+echo ">> [5/6] 写入配置、人设与环境变量..."
 
 API_SERVER_KEY="$(openssl rand -hex 16)"
 
@@ -148,6 +148,15 @@ if [ -n "$CFG_TG_TOKEN" ]; then
   [ -n "$CFG_TG_ADMIN" ] && echo "TELEGRAM_ALLOWED_USERS=$CFG_TG_ADMIN" >> "$H/.env"
 fi
 chmod 600 "$H/.env"
+
+if [ ! -f "$H/SOUL.md" ]; then
+  cat <<'EOF' > "$H/SOUL.md"
+# 身份与交流准则
+你是一个聪明、利落、专业且全能的 AI 个人助理。
+你具备高超的代码编写、Linux 运维管理、网络配置与全自动化解决问题的能力。
+在与用户沟通时，请始终默认使用流畅自然的中文进行交流，回答直接有力、条理清晰。
+EOF
+fi
 
 cat <<EOF > "$H/config.yaml"
 model:
@@ -245,6 +254,22 @@ fi
 # 8. 配置守护进程并启动 (Gateway + Web-UI)
 echo ">> [6/6] 注册 Systemd 守护进程并启动服务..."
 
+# 动态解析 hermes 二进制绝对路径并建立全局软链接
+HERMES_BIN="$(command -v hermes 2>/dev/null || true)"
+if [ -z "$HERMES_BIN" ] || [ ! -x "$HERMES_BIN" ]; then
+  if [ -x "$USER_HOME/.local/bin/hermes" ]; then
+    HERMES_BIN="$USER_HOME/.local/bin/hermes"
+  elif [ -x "$USER_HOME/.hermes/hermes-agent/venv/bin/hermes" ]; then
+    HERMES_BIN="$USER_HOME/.hermes/hermes-agent/venv/bin/hermes"
+  else
+    HERMES_BIN="/usr/local/bin/hermes"
+  fi
+fi
+
+if [ -x "$HERMES_BIN" ] && [ ! -f /usr/local/bin/hermes ]; then
+  $SUDO ln -sf "$HERMES_BIN" /usr/local/bin/hermes 2>/dev/null || true
+fi
+
 cat <<EOF | $SUDO tee /etc/systemd/system/hermes-gateway.service >/dev/null
 [Unit]
 Description=Hermes Agent Gateway
@@ -255,7 +280,7 @@ Wants=network-online.target
 Type=simple
 User=$TARGET_USER
 WorkingDirectory=$USER_HOME
-ExecStart=/usr/local/bin/hermes gateway
+ExecStart=$HERMES_BIN gateway
 Restart=always
 RestartSec=5
 Environment=HOME=$USER_HOME
