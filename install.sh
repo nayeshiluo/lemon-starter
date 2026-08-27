@@ -194,6 +194,54 @@ fi
 chown -R "$TARGET_USER:$TARGET_USER" "$H"
 chmod 700 "$H"
 
+# 7.1 自动同步 Telegram Bot 原生中文指令菜单
+if [ -n "$CFG_TG_TOKEN" ]; then
+  echo ">> 正在同步 Telegram Bot 原生中文指令菜单..."
+  python3 - "$CFG_TG_TOKEN" <<'PYEOF' 2>/dev/null || true
+import urllib.request, json, sys
+token = sys.argv[1] if len(sys.argv) > 1 else ""
+if not token:
+    sys.exit(0)
+
+commands_private = [
+    {"command": "help", "description": "🌸 查看使用说明与帮助"},
+    {"command": "model", "description": "🤖 切换当前使用的 AI 模型"},
+    {"command": "new", "description": "💬 开启全新对话会话"},
+    {"command": "clear", "description": "🧹 清屏并重置上下文记忆"},
+    {"command": "stop", "description": "🛑 终止当前任务或后台进程"},
+    {"command": "status", "description": "📊 查看 Token 消耗与运行状态"},
+    {"command": "summary", "description": "📋 智能总结近期聊天发言"},
+    {"command": "whoami", "description": "👤 查看当前身份与管理权限"}
+]
+
+commands_group = [
+    {"command": "help", "description": "🌸 查看帮助与使用说明"},
+    {"command": "model", "description": "🤖 切换当前使用的 AI 模型"},
+    {"command": "stop", "description": "🛑 终止群内谈话或当前任务"},
+    {"command": "summary", "description": "📋 智能总结群内近期发言 (例: /summary 50条)"},
+    {"command": "clear", "description": "🧹 重置群聊上下文记忆"},
+    {"command": "whoami", "description": "👤 查看我的身份与使用权限"}
+]
+
+for scope, cmds in [
+    ({"type": "default"}, commands_private),
+    ({"type": "all_private_chats"}, commands_private),
+    ({"type": "all_group_chats"}, commands_group)
+]:
+    try:
+        payload = json.dumps({"commands": cmds, "scope": scope}).encode("utf-8")
+        req = urllib.request.Request(
+            f"https://api.telegram.org/bot{token}/setMyCommands",
+            data=payload,
+            headers={"Content-Type": "application/json"}
+        )
+        urllib.request.urlopen(req, timeout=10)
+    except Exception:
+        pass
+PYEOF
+  echo "  ✓ 中文指令菜单同步完成"
+fi
+
 # 8. 配置守护进程并启动 (Gateway + Web-UI)
 echo ">> [6/6] 注册 Systemd 守护进程并启动服务..."
 
