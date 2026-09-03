@@ -58,7 +58,7 @@ mkdir -p "$H" "$H/skills"
 
 # 4. 安装 Hermes Web UI 网页控制台
 echo ">> [3/6] 安装 Hermes Web UI 网页控制台..."
-$SUDO npm install -g --allow-scripts=agent-browser,node-pty,vue-demi hermes-web-ui@latest || true
+$SUDO npm install -g --allow-scripts=agent-browser,node-pty,protobufjs,vue-demi hermes-web-ui@latest || true
 
 # 5. 部署全量扩展技能树
 echo ">> [4/6] 部署扩展技能树 (Skills)..."
@@ -196,6 +196,10 @@ EOF
     cat <<EOF >> "$H/config.yaml"
   allow_admin_from:
     - $CFG_TG_ADMIN
+  group_allow_admin_from:
+    - $CFG_TG_ADMIN
+  user_allowed_commands: help,whoami
+  group_user_allowed_commands: help,whoami,clear,model,stop,summary
 EOF
   fi
 fi
@@ -295,13 +299,49 @@ if [ -n "$CFG_TG_TOKEN" ]; then
   $SUDO systemctl enable --now hermes-gateway 2>/dev/null || true
 fi
 
-# 启动 Web UI 控制面板
-if [ "$TARGET_USER" = "root" ]; then
-  hermes-web-ui stop 2>/dev/null || true
-  hermes-web-ui start 2>/dev/null || true
+# 启动 Web UI 控制面板 (注册 systemd 守护进程以保障开机自启与崩溃自愈)
+NODE_BIN="$(command -v node || echo /usr/bin/node)"
+NPM_ROOT="$($SUDO npm root -g 2>/dev/null || echo /usr/local/lib/node_modules)"
+WEB_UI_DIR="$NPM_ROOT/hermes-web-ui"
+
+if [ -d "$WEB_UI_DIR" ]; then
+  cat <<EOF | $SUDO tee /etc/systemd/system/hermes-web-ui.service >/dev/null
+[Unit]
+Description=Hermes Web UI Service
+After=network-online.target hermes-gateway.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=$TARGET_USER
+Group=$TARGET_USER
+WorkingDirectory=$WEB_UI_DIR
+Environment="HOME=$USER_HOME"
+Environment="USER=$TARGET_USER"
+Environment="NODE_ENV=production"
+Environment="PORT=8648"
+Environment="PATH=$USER_HOME/.local/bin:/usr/local/bin:/usr/bin:/bin"
+ExecStart=$NODE_BIN dist/server/index.js
+Restart=always
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+  $SUDO systemctl daemon-reload
+  $SUDO systemctl enable --now hermes-web-ui 2>/dev/null || true
 else
-  su - "$TARGET_USER" -c 'hermes-web-ui stop 2>/dev/null || true'
-  su - "$TARGET_USER" -c 'hermes-web-ui start 2>/dev/null || true'
+  # 降级备用启动方案
+  if [ "$TARGET_USER" = "root" ]; then
+    hermes-web-ui stop 2>/dev/null || true
+    hermes-web-ui start 2>/dev/null || true
+  else
+    su - "$TARGET_USER" -c 'hermes-web-ui stop 2>/dev/null || true'
+    su - "$TARGET_USER" -c 'hermes-web-ui start 2>/dev/null || true'
+  fi
 fi
 
 SERVER_IP="$(curl -s --connect-timeout 3 https://api.ipify.org || echo "103.69.129.103")"

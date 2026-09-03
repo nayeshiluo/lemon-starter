@@ -64,7 +64,8 @@ curl -fsSL https://raw.githubusercontent.com/nayeshiluo/lemon-starter/main/insta
 ## 💬 常用运维命令
 
 - **进入终端交互**：`hermes`
-- **重启 Web UI 面板**：`hermes-web-ui restart`
+- **重启 Web UI 面板**：`sudo systemctl restart hermes-web-ui`（或 `hermes-web-ui restart`）
+- **查看 Web UI 日志**：`sudo journalctl -u hermes-web-ui -f`
 - **重启 Telegram 网关**：`sudo systemctl restart hermes-gateway`
 - **查看网关运行日志**：`sudo journalctl -u hermes-gateway -f`
 - **系统健康体检**：`hermes doctor`
