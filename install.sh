@@ -5,10 +5,22 @@ umask 077
 
 TARGET_USER="${SUDO_USER:-$(whoami)}"
 USER_HOME="$(eval echo ~$TARGET_USER)"
-if [ -e "$USER_HOME/.hermes/.env" ] || [ -e "$USER_HOME/.hermes/config.yaml" ] || [ -e "$USER_HOME/.hermes-web-ui" ] || [ -e /etc/systemd/system/hermes-web-ui.service ]; then
-  echo "FAILED: 本脚本仅用于全新安装；检测到已有配置或服务，已停止以防覆盖。" >&2
-  exit 1
-fi
+assert_fresh_install() {
+  local home_dir="$1" unit_dir="$2" existing
+  for existing in "$home_dir/.hermes/.env" "$home_dir/.hermes/config.yaml" "$home_dir/.hermes-web-ui" \
+    "$unit_dir/hermes-web-ui.service" "$unit_dir/hermes-web-ui.service.d" \
+    "$unit_dir/hermes-gateway.service" "$unit_dir/hermes-gateway.service.d"; do
+    if [ -e "$existing" ] || [ -L "$existing" ]; then
+      echo "FAILED: 本脚本仅用于全新安装；检测到已有配置或服务，已停止以防覆盖。" >&2
+      return 1
+    fi
+  done
+  if [ -L "$home_dir/.hermes" ]; then
+    echo "FAILED: Hermes 配置目录不能为符号链接。" >&2
+    return 1
+  fi
+}
+assert_fresh_install "$USER_HOME" /etc/systemd/system
 WORKDIR="$(mktemp -d /tmp/hermes_install_XXXXXX)"
 
 trap 'rm -rf "$WORKDIR"' EXIT
@@ -158,11 +170,19 @@ fi
 echo ">> [5/6] 写入配置、人设与环境变量..."
 
 API_SERVER_KEY="$(openssl rand -hex 16)"
-[ -n "$CFG_API_KEY" ] || { echo "FAILED: 模型 API Key 不能为空" >&2; exit 1; }
-for cfg_value in "$CFG_MODEL" "$CFG_BASE_URL" "$CFG_API_KEY" "$CFG_TG_TOKEN" "$CFG_TG_ADMIN"; do
-  [[ "$cfg_value" != *$'\n'* && "$cfg_value" != *$'\r'* ]] || { echo "FAILED: 配置值不能包含换行" >&2; exit 1; }
-done
-[[ -z "$CFG_TG_ADMIN" || "$CFG_TG_ADMIN" =~ ^[0-9]+$ ]] || { echo "FAILED: Telegram ID 必须为数字" >&2; exit 1; }
+validate_installer_config() {
+  local cfg_value
+  [ -n "$CFG_API_KEY" ] || { echo "FAILED: 模型 API Key 不能为空" >&2; return 1; }
+  for cfg_value in "$CFG_MODEL" "$CFG_BASE_URL" "$CFG_API_KEY" "$CFG_TG_TOKEN" "$CFG_TG_ADMIN"; do
+    [[ "$cfg_value" != *$'\n'* && "$cfg_value" != *$'\r'* ]] || { echo "FAILED: 配置值不能包含换行" >&2; return 1; }
+  done
+  [[ -z "$CFG_TG_ADMIN" || "$CFG_TG_ADMIN" =~ ^[1-9][0-9]*$ ]] || { echo "FAILED: Telegram ID 必须为正整数" >&2; return 1; }
+  if [ -n "$CFG_TG_TOKEN" ] && [ -z "$CFG_TG_ADMIN" ]; then
+    echo "FAILED: 启用 Telegram 时必须填写自己的管理员 ID。" >&2
+    return 1
+  fi
+}
+validate_installer_config
 json_scalar() { python3 -c 'import json,sys; print(json.dumps(sys.stdin.read(),ensure_ascii=False))'; }
 MODEL_YAML="$(printf '%s' "$CFG_MODEL" | json_scalar)"
 BASE_URL_YAML="$(printf '%s' "$CFG_BASE_URL" | json_scalar)"

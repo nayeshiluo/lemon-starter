@@ -6,7 +6,7 @@
 
 ## 安装
 
-仅在全新 Ubuntu / Debian 主机上使用，推荐普通用户配合 sudo。已有 `.env`、`config.yaml`、Web UI 数据或服务时，脚本会停止，避免覆盖现有配置。
+仅在全新 Ubuntu / Debian 主机上使用，推荐普通用户配合 sudo。已有 `.env`、`config.yaml`、Web UI 数据、网关/面板服务或其 systemd 覆盖配置时，脚本会停止；相关路径为符号链接时也会停止，避免覆盖现有配置。
 
 ```bash
 git clone https://github.com/nayeshiluo/lemon-starter.git
@@ -16,7 +16,7 @@ STARTER_REVISION="$(git rev-parse HEAD)" bash install.sh
 
 先阅读下载的脚本。安装所用技能包、清单和校验代码全部从这个固定提交获取，Web UI 固定为 `0.6.44`，其声明要求 Node.js `>=23`；套件为较旧环境安装 Node.js 24.x。技能解包前核对文件清单、内容摘要、凭证格式及路径安全。Node.js 与 Hermes 官方安装器仍是外部依赖，应按其发布流程评估；此套件不代表对第三方依赖的全面安全认证。
 
-向导需要模型名称、兼容 API Base URL 和 Key。Telegram Bot Token 与管理员 ID 可选；Token 填写后管理员 ID 应为自己的数字账号 ID。配置值不允许换行，秘密不作为 Python 命令行参数传递。
+向导需要模型名称、兼容 API Base URL 和 Key。Telegram 可跳过；填写 Bot Token 后必须填写自己的正整数管理员 ID，留空或格式错误会在写入配置前停止。配置值不允许换行，秘密不作为 Python 命令行参数传递。
 
 无人值守安装可预设 `MODEL_NAME`、`BASE_URL`、`API_KEY`、`TELEGRAM_BOT_TOKEN`、`TELEGRAM_ADMIN_ID`。不要把实际密钥提交到仓库或公开安装日志。
 
