@@ -1,71 +1,57 @@
-# 🤖 Hermes Agent 自动化一键安装套件 (含 Web UI 网页管理面板)
+# Hermes Agent 开源安装套件
 
-本套件提供 Hermes Agent 的自动化一键安装脚本、完整技能树（Skills）以及 **Web UI 网页控制台（端口 8648）**。支持自定义任何 OpenAI 兼容的模型 URL 端点与 API Key，并可快速绑定 Telegram Bot。
+包含安装脚本、112 个技能的公开模板和 Hermes Web UI。公开套件用于全新安装；完整生产配置、密钥、会话和数据库需要独立的加密备份。
 
----
+2026-10-04 安全更新：技能包已移除本轮发现的实际部署凭证；历史可见分支已脱敏重写。旧代理密钥已轮换。历史重写无法撤回他人已下载的内容或 GitHub 缓存，发现过的秘密应按已泄露处理。
 
-## 🚀 极速一键安装指令
+## 安装
 
-在任何全新的 Ubuntu / Debian 服务器上，只需复制粘贴并执行下面一行命令：
-
-```bash
-curl -fsSL https://raw.githubusercontent.com/nayeshiluo/lemon-starter/main/install.sh | bash
-```
-
-或者使用 `bash <(...)` 执行：
+仅在全新 Ubuntu / Debian 主机上使用，推荐普通用户配合 sudo。已有 `.env`、`config.yaml`、Web UI 数据或服务时，脚本会停止，避免覆盖现有配置。
 
 ```bash
-bash <(curl -fsSL https://raw.githubusercontent.com/nayeshiluo/lemon-starter/main/install.sh)
+git clone https://github.com/nayeshiluo/lemon-starter.git
+cd lemon-starter
+STARTER_REVISION="$(git rev-parse HEAD)" bash install.sh
 ```
 
----
+先阅读下载的脚本。安装所用技能包、清单和校验代码全部从这个固定提交获取，Web UI 固定为 `0.6.44`。技能解包前核对文件清单、内容摘要、凭证格式及路径安全。Node.js 与 Hermes 官方安装器仍是外部依赖，应按其发布流程评估；此套件不代表对第三方依赖的全面安全认证。
 
-## 🌐 Web UI 网页管理面板
+向导需要模型名称、兼容 API Base URL 和 Key。Telegram Bot Token 与管理员 ID 可选；Token 填写后管理员 ID 应为自己的数字账号 ID。配置值不允许换行，秘密不作为 Python 命令行参数传递。
 
-安装脚本会自动部署并启动 **Hermes Web UI** 控制台：
+无人值守安装可预设 `MODEL_NAME`、`BASE_URL`、`API_KEY`、`TELEGRAM_BOT_TOKEN`、`TELEGRAM_ADMIN_ID`。不要把实际密钥提交到仓库或公开安装日志。
 
-- **面板地址**：`http://<你的服务器IP>:8648`
-- **默认管理员账号**：`admin`
-- **默认管理员密码**：`123456` *(首次登录后请在后台安全设置中修改)*
-- **功能特性**：网页端实时多轮对话、技能市场与配置管理、会话历史树、模型网关状态监控等。
+## Web UI 安全访问
 
-> ⚠️ **注意**：如果使用的是云服务器（如 AWS、阿里云、腾讯云等），请在云控制台的安全组规则中**放行入站 TCP 8648 端口**。
+面板只监听 `127.0.0.1:8648`，无需在云安全组开放公网 8648。首次启动通过本机 API 将初始账号改为随机强密码，并验证新密码登录。初始化失败会停止面板并明确报错。
 
----
+账号为 `admin`。初始随机密码保存在 `~/.hermes/webui-initial-login.json`，权限 600；请通过自己的 SSH 终端读取，不要转发此文件。
 
-## 🛠️ 安装过程交互说明
-
-运行安装脚本后，终端会自动进入配置向导：
-
-1. **模型名称**（如 `deepseek-chat` / `gpt-4o` / `claude-3-5-sonnet`）
-2. **模型 Base URL**（如 `https://api.deepseek.com/v1` 或你自己的中转站 / OpenAI 兼容端点）
-3. **模型 API Key**（`sk-xxxxxxxx`）
-4. **Telegram Bot Token**（可选，直接在终端/网页使用可回车跳过）
-5. **Telegram 管理员 User ID**（可选）
-
----
-
-## ⚙️ 自动化非交互式批量安装
-
-可以通过预设环境变量实现无人值守静默安装：
+在电脑建立 SSH 通道后访问 `http://127.0.0.1:8648`：
 
 ```bash
-export MODEL_NAME="deepseek-chat"
-export BASE_URL="https://api.deepseek.com/v1"
-export API_KEY="sk-xxxxxxxxxxxxxxxxxxxxxxxx"
-export TELEGRAM_BOT_TOKEN="123456789:ABCdefGHIjklMNOpqrSTUvwxYZ"
-export TELEGRAM_ADMIN_ID="123456789"
-
-curl -fsSL https://raw.githubusercontent.com/nayeshiluo/lemon-starter/main/install.sh | bash
+ssh -L 8648:127.0.0.1:8648 用户名@服务器地址
 ```
 
----
+iPhone / iPad 使用支持本地端口转发的 SSH 客户端，配置本地 8648 → 服务器 `127.0.0.1:8648`，保持连接后用 Safari 访问本机地址。需要域名访问时，另行配置 HTTPS、鉴权与访问限制；不要直接改为默认弱密码的公网 HTTP 面板。
 
-## 💬 常用运维命令
+## 公开技能快照与自动检查
 
-- **进入终端交互**：`hermes`
-- **重启 Web UI 面板**：`sudo systemctl restart hermes-web-ui`（或 `hermes-web-ui restart`）
-- **查看 Web UI 日志**：`sudo journalctl -u hermes-web-ui -f`
-- **重启 Telegram 网关**：`sudo systemctl restart hermes-gateway`
-- **查看网关运行日志**：`sudo journalctl -u hermes-gateway -f`
-- **系统健康体检**：`hermes doctor`
+`skills_bundle.manifest.json` 列出已审核公开文件的内容摘要；`SHA256SUMS` 提供包摘要。112 是技能数量，不等于全部技能、外部 API 或依赖已经功能验收。
+
+发布端使用私有审批清单：源文件和公开输出必须同时与已审核摘要一致。新增、删除、修改技能，未知文件、私钥、会话文件、嵌套压缩包、无法解码的文件或扫描错误都会阻止任务。日志仅输出位置与类型，不输出秘密原文。未审内容不自动进入公开仓库；需要复审后更新快照及私有审批清单。
+
+正常每日任务会核对源树、公开包和远端提交；没有变化时复用同一个已审核快照，不制造仅时间戳变化的重复发布。生产技能、模型路由和运行中的机器人不受此公开导出策略改变。
+
+安全回归测试：
+
+```bash
+python3 -m unittest discover -s tests -v
+python3 tools/public_skills_guard.py skills_bundle.tar.gz skills_bundle.manifest.json
+```
+
+## 运维与恢复
+
+- `hermes doctor` 检查 Hermes。
+- `sudo systemctl status hermes-web-ui` 查看面板；`journalctl -u hermes-web-ui` 查看服务日志。
+- 安装器不负责覆盖升级既有实例；先备份配置、数据库和服务，再单独规划迁移。
+- 安全历史重写后，旧克隆应重新克隆，避免把旧的敏感历史推回。生产部署与私人备份不应从公开技能包恢复秘密。

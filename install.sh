@@ -1,9 +1,14 @@
 #!/usr/bin/env bash
 # Hermes Agent 纯净自动化一键安装部署套件 (含 Web UI 面板 + Telegram 网关)
 set -euo pipefail
+umask 077
 
 TARGET_USER="${SUDO_USER:-$(whoami)}"
 USER_HOME="$(eval echo ~$TARGET_USER)"
+if [ -e "$USER_HOME/.hermes/.env" ] || [ -e "$USER_HOME/.hermes/config.yaml" ] || [ -e "$USER_HOME/.hermes-web-ui" ] || [ -e /etc/systemd/system/hermes-web-ui.service ]; then
+  echo "FAILED: 本脚本仅用于全新安装；检测到已有配置或服务，已停止以防覆盖。" >&2
+  exit 1
+fi
 WORKDIR="$(mktemp -d /tmp/hermes_install_XXXXXX)"
 
 trap 'rm -rf "$WORKDIR"' EXIT
@@ -34,7 +39,7 @@ fi
 # 2. 安装基础依赖与 xz-utils, Node.js
 echo ">> [1/6] 安装系统依赖 (curl, git, xz-utils, sqlite3, systemd)..."
 $SUDO apt-get update -y
-$SUDO apt-get install -y curl git tar gzip xz-utils sqlite3 ca-certificates jq systemd openssl
+$SUDO apt-get install -y curl git tar gzip xz-utils sqlite3 ca-certificates jq systemd openssl python3
 
 if ! command -v node &>/dev/null || [ "$(node -v | cut -d. -f1 | tr -d 'v')" -lt 20 ]; then
   echo "安装 Node.js 22.x..."
@@ -44,7 +49,7 @@ fi
 
 # 3. 安装 Hermes Agent 官方核心
 echo ">> [2/6] 安装 Hermes Agent 核心与 Python/uv 环境..."
-if [ "$TARGET_USER" = "root" ]; then
+if [ "$(whoami)" = "$TARGET_USER" ]; then
   curl -fsSL https://hermes-agent.nousresearch.com/install.sh | bash
 else
   su - "$TARGET_USER" -c 'curl -fsSL https://hermes-agent.nousresearch.com/install.sh | bash'
@@ -58,15 +63,32 @@ mkdir -p "$H" "$H/skills"
 
 # 4. 安装 Hermes Web UI 网页控制台
 echo ">> [3/6] 安装 Hermes Web UI 网页控制台..."
-$SUDO npm install -g --allow-scripts=agent-browser,node-pty,protobufjs,vue-demi hermes-web-ui@latest || true
+$SUDO npm install -g --allow-scripts=agent-browser,node-pty,protobufjs,vue-demi hermes-web-ui@0.6.44
 
 # 5. 部署全量扩展技能树
 echo ">> [4/6] 部署扩展技能树 (Skills)..."
-SKILLS_URL="https://raw.githubusercontent.com/nayeshiluo/lemon-starter/main/skills_bundle.tar.gz"
-if curl -fsSL "$SKILLS_URL" -o "$WORKDIR/skills.tar.gz" 2>/dev/null; then
-  tar xzf "$WORKDIR/skills.tar.gz" -C "$H" 2>/dev/null || true
-  echo "  ✓ 技能树注入完成"
-fi
+STARTER_REVISION="${STARTER_REVISION:-$(curl -fsSL https://api.github.com/repos/nayeshiluo/lemon-starter/commits/main | jq -er .sha)}"
+[[ "$STARTER_REVISION" =~ ^[0-9a-f]{40}$ ]] || { echo "FAILED: 无效的套件版本" >&2; exit 1; }
+ASSET_BASE="https://raw.githubusercontent.com/nayeshiluo/lemon-starter/$STARTER_REVISION"
+curl -fsSL "$ASSET_BASE/skills_bundle.tar.gz" -o "$WORKDIR/skills.tar.gz"
+curl -fsSL "$ASSET_BASE/skills_bundle.manifest.json" -o "$WORKDIR/manifest.json"
+curl -fsSL "$ASSET_BASE/tools/public_skills_guard.py" -o "$WORKDIR/public_skills_guard.py"
+curl -fsSL "$ASSET_BASE/tools/bootstrap_webui.py" -o "$WORKDIR/bootstrap_webui.py"
+python3 "$WORKDIR/public_skills_guard.py" "$WORKDIR/skills.tar.gz" "$WORKDIR/manifest.json"
+python3 - "$WORKDIR/skills.tar.gz" "$H" <<'PY'
+import pathlib,sys,tarfile
+root=pathlib.Path(sys.argv[2]).resolve()
+with tarfile.open(sys.argv[1]) as archive:
+    for member in archive:
+        if not member.isfile():continue
+        dest=root/member.name
+        if root not in dest.resolve().parents:raise ValueError('unsafe extraction destination')
+        if dest.is_symlink():raise ValueError('symlink destination')
+        dest.parent.mkdir(parents=True,exist_ok=True)
+        with dest.open('wb') as output:output.write(archive.extractfile(member).read())
+        dest.chmod(member.mode&0o755)
+PY
+echo "  ✓ 技能包校验及安装完成：$STARTER_REVISION"
 
 # 6. 交互式配置向导 (支持从 /dev/tty 读取，兼容 curl | bash)
 echo ""
@@ -136,15 +158,25 @@ fi
 echo ">> [5/6] 写入配置、人设与环境变量..."
 
 API_SERVER_KEY="$(openssl rand -hex 16)"
+[ -n "$CFG_API_KEY" ] || { echo "FAILED: 模型 API Key 不能为空" >&2; exit 1; }
+for cfg_value in "$CFG_MODEL" "$CFG_BASE_URL" "$CFG_API_KEY" "$CFG_TG_TOKEN" "$CFG_TG_ADMIN"; do
+  [[ "$cfg_value" != *$'\n'* && "$cfg_value" != *$'\r'* ]] || { echo "FAILED: 配置值不能包含换行" >&2; exit 1; }
+done
+[[ -z "$CFG_TG_ADMIN" || "$CFG_TG_ADMIN" =~ ^[0-9]+$ ]] || { echo "FAILED: Telegram ID 必须为数字" >&2; exit 1; }
+json_scalar() { python3 -c 'import json,sys; print(json.dumps(sys.stdin.read(),ensure_ascii=False))'; }
+MODEL_YAML="$(printf '%s' "$CFG_MODEL" | json_scalar)"
+BASE_URL_YAML="$(printf '%s' "$CFG_BASE_URL" | json_scalar)"
+API_KEY_YAML="$(printf '%s' "$CFG_API_KEY" | json_scalar)"
+TG_TOKEN_ENV="$(printf '%s' "$CFG_TG_TOKEN" | json_scalar)"
 
 cat <<EOF > "$H/.env"
-CUSTOM_API_KEY=$CFG_API_KEY
-OPENAI_API_KEY=$CFG_API_KEY
+CUSTOM_API_KEY=$API_KEY_YAML
+OPENAI_API_KEY=$API_KEY_YAML
 API_SERVER_KEY=$API_SERVER_KEY
 EOF
 
 if [ -n "$CFG_TG_TOKEN" ]; then
-  echo "TELEGRAM_BOT_TOKEN=$CFG_TG_TOKEN" >> "$H/.env"
+  echo "TELEGRAM_BOT_TOKEN=$TG_TOKEN_ENV" >> "$H/.env"
   [ -n "$CFG_TG_ADMIN" ] && echo "TELEGRAM_ALLOWED_USERS=$CFG_TG_ADMIN" >> "$H/.env"
 fi
 chmod 600 "$H/.env"
@@ -160,10 +192,10 @@ fi
 
 cat <<EOF > "$H/config.yaml"
 model:
-  default: "$CFG_MODEL"
+  default: $MODEL_YAML
   provider: "custom"
-  base_url: "$CFG_BASE_URL"
-  api_key: "$CFG_API_KEY"
+  base_url: $BASE_URL_YAML
+  api_key: $API_KEY_YAML
 
 network:
   force_ipv4: true
@@ -181,7 +213,7 @@ platforms:
   api_server:
     enabled: true
     key: "$API_SERVER_KEY"
-    cors_origins: ["*"]
+    cors_origins: ["http://127.0.0.1:8648", "http://localhost:8648"]
 
 EOF
 
@@ -210,9 +242,10 @@ chmod 700 "$H"
 # 7.1 自动同步 Telegram Bot 原生中文指令菜单
 if [ -n "$CFG_TG_TOKEN" ]; then
   echo ">> 正在同步 Telegram Bot 原生中文指令菜单..."
-  python3 - "$CFG_TG_TOKEN" <<'PYEOF' 2>/dev/null || true
-import urllib.request, json, sys
-token = sys.argv[1] if len(sys.argv) > 1 else ""
+  export STARTER_TG_TOKEN="$CFG_TG_TOKEN"
+  python3 - <<'PYEOF'
+import urllib.request, json, os, sys
+token = os.environ.get("STARTER_TG_TOKEN", "")
 if not token:
     sys.exit(0)
 
@@ -241,17 +274,15 @@ for scope, cmds in [
     ({"type": "all_private_chats"}, commands_private),
     ({"type": "all_group_chats"}, commands_group)
 ]:
+    payload = json.dumps({"commands": cmds, "scope": scope}).encode("utf-8")
+    req = urllib.request.Request(f"https://api.telegram.org/bot{token}/setMyCommands",data=payload,headers={"Content-Type": "application/json"})
     try:
-        payload = json.dumps({"commands": cmds, "scope": scope}).encode("utf-8")
-        req = urllib.request.Request(
-            f"https://api.telegram.org/bot{token}/setMyCommands",
-            data=payload,
-            headers={"Content-Type": "application/json"}
-        )
-        urllib.request.urlopen(req, timeout=10)
-    except Exception:
-        pass
+        with urllib.request.urlopen(req, timeout=10) as response:
+            if not json.load(response).get("ok"):raise ValueError('API rejected menu')
+    except Exception as e:
+        raise SystemExit('FAILED: Telegram menu '+type(e).__name__) from None
 PYEOF
+  unset STARTER_TG_TOKEN
   echo "  ✓ 中文指令菜单同步完成"
 fi
 
@@ -296,7 +327,7 @@ EOF
 
 $SUDO systemctl daemon-reload
 if [ -n "$CFG_TG_TOKEN" ]; then
-  $SUDO systemctl enable --now hermes-gateway 2>/dev/null || true
+  $SUDO systemctl enable --now hermes-gateway
 fi
 
 # 启动 Web UI 控制面板 (注册 systemd 守护进程以保障开机自启与崩溃自愈)
@@ -320,6 +351,7 @@ Environment="HOME=$USER_HOME"
 Environment="USER=$TARGET_USER"
 Environment="NODE_ENV=production"
 Environment="PORT=8648"
+Environment="BIND_HOST=127.0.0.1"
 Environment="PATH=$USER_HOME/.local/bin:/usr/local/bin:/usr/bin:/bin"
 ExecStart=$NODE_BIN dist/server/index.js
 Restart=always
@@ -332,27 +364,28 @@ WantedBy=multi-user.target
 EOF
 
   $SUDO systemctl daemon-reload
-  $SUDO systemctl enable --now hermes-web-ui 2>/dev/null || true
+  $SUDO systemctl enable --now hermes-web-ui
 else
-  # 降级备用启动方案
-  if [ "$TARGET_USER" = "root" ]; then
-    hermes-web-ui stop 2>/dev/null || true
-    hermes-web-ui start 2>/dev/null || true
-  else
-    su - "$TARGET_USER" -c 'hermes-web-ui stop 2>/dev/null || true'
-    su - "$TARGET_USER" -c 'hermes-web-ui start 2>/dev/null || true'
-  fi
+  echo "FAILED: Web UI 安装目录不存在，服务未启动" >&2
+  exit 1
 fi
 
-SERVER_IP="$(curl -s --connect-timeout 3 https://api.ipify.org || echo "<YOUR_SERVER_IP>")"
+if ! python3 "$WORKDIR/bootstrap_webui.py" --credentials "$H/webui-initial-login.json"; then
+  $SUDO systemctl stop hermes-web-ui
+  echo "FAILED: 初始密码配置失败；面板已停止，请检查本地凭据文件后恢复" >&2
+  exit 1
+fi
+chown "$TARGET_USER:$TARGET_USER" "$H/webui-initial-login.json"
+$SUDO systemctl is-active --quiet hermes-web-ui
+if [ -n "$CFG_TG_TOKEN" ]; then $SUDO systemctl is-active --quiet hermes-gateway; fi
 
 echo ""
 echo "=========================================================="
 echo "  🎉 Hermes Agent & Web UI 面板已成功部署！"
 echo "=========================================================="
-echo "  🌐 网页管理面板地址:  http://$SERVER_IP:8648"
-echo "  👤 默认超管登录账号:  admin"
-echo "  🔑 默认超管登录密码:  123456  (首次登录后请在后台修改)"
+echo "  🌐 面板只监听本机: http://127.0.0.1:8648；请通过 SSH 通道访问"
+echo "  👤 超管账号: admin；随机密码保存在 $H/webui-initial-login.json（权限600）"
+echo "  🔒 无需开放公网 8648；密码不会写入终端日志"
 echo "----------------------------------------------------------"
 echo "  🤖 模型端点: $CFG_BASE_URL ($CFG_MODEL)"
 if [ -n "$CFG_TG_TOKEN" ]; then
