@@ -41,9 +41,9 @@ echo ">> [1/6] 安装系统依赖 (curl, git, xz-utils, sqlite3, systemd)..."
 $SUDO apt-get update -y
 $SUDO apt-get install -y curl git tar gzip xz-utils sqlite3 ca-certificates jq systemd openssl python3
 
-if ! command -v node &>/dev/null || [ "$(node -v | cut -d. -f1 | tr -d 'v')" -lt 20 ]; then
-  echo "安装 Node.js 22.x..."
-  curl -fsSL https://deb.nodesource.com/setup_22.x | $SUDO bash -
+if ! command -v node &>/dev/null || [ "$(node -v | cut -d. -f1 | tr -d 'v')" -lt 24 ]; then
+  echo "安装 Node.js 24.x（Web UI 0.6.44 要求 Node >=23）..."
+  curl -fsSL https://deb.nodesource.com/setup_24.x | $SUDO bash -
   $SUDO apt-get install -y nodejs
 fi
 
@@ -352,6 +352,8 @@ Environment="USER=$TARGET_USER"
 Environment="NODE_ENV=production"
 Environment="PORT=8648"
 Environment="BIND_HOST=127.0.0.1"
+Environment="HERMES_WEB_UI_DISABLE_GATEWAY_AUTOSTART=1"
+Environment="HERMES_WEB_UI_MANAGED_GATEWAY=0"
 Environment="PATH=$USER_HOME/.local/bin:/usr/local/bin:/usr/bin:/bin"
 ExecStart=$NODE_BIN dist/server/index.js
 Restart=always
