@@ -160,5 +160,64 @@ class InstallerPromptTests(unittest.TestCase):
             os.close(slave)
 
 
+
+class InstallerBuildMemoryTests(unittest.TestCase):
+    def configured(self, memory, options=None):
+        env = dict(os.environ, TOTAL_MEM=str(memory))
+        env.pop('NODE_OPTIONS', None)
+        if options is not None:
+            env['NODE_OPTIONS'] = options
+        result = subprocess.run(['bash', '-euc', function('configure_build_memory') +
+                                '\nconfigure_build_memory; printf "%s" "${NODE_OPTIONS:-}"'],
+                                env=env, capture_output=True, text=True)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        return result.stdout
+
+    def test_low_memory_build_has_explicit_heap_limit(self):
+        self.assertEqual(self.configured(326), '--max-old-space-size=512')
+        self.assertEqual(self.configured(1024), '--max-old-space-size=512')
+
+    def test_custom_and_larger_host_options_preserved(self):
+        self.assertEqual(self.configured(512, '--max-old-space-size=768'), '--max-old-space-size=768')
+        self.assertEqual(self.configured(1500), '')
+        self.assertEqual(self.configured(2048), '')
+
+
+class InstallerWebuiPermissionsTests(unittest.TestCase):
+    def execute(self, fail=False):
+        with tempfile.TemporaryDirectory() as tmp:
+            stub = pathlib.Path(tmp) / 'npm'
+            stub.write_text('#!/bin/bash\numask\nexit "$CALL_EXIT"\n')
+            stub.chmod(0o700)
+            env = dict(os.environ, PATH=tmp + ':' + os.environ['PATH'], SUDO='', CALL_EXIT='17' if fail else '0')
+            return subprocess.run(['bash', '-euc', 'umask 077\n' + function('install_webui') +
+                                  '\ninstall_webui\numask\necho INSTALL_CONTINUED'],
+                                  env=env, capture_output=True, text=True)
+
+    def test_global_install_can_be_read_without_relaxing_secret_permissions(self):
+        result = self.execute()
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(result.stdout.splitlines(), ['0022', '0077', 'INSTALL_CONTINUED'])
+
+    def test_npm_failure_stops_installation(self):
+        result = self.execute(fail=True)
+        self.assertEqual(result.returncode, 17)
+        self.assertNotIn('INSTALL_CONTINUED', result.stdout)
+
+
+class InstallerConfigurationPermissionsTests(unittest.TestCase):
+    def test_official_configuration_mode_is_tightened(self):
+        stage = 'cat <<EOF > "$H/config.yaml"' + SOURCE.split('cat <<EOF > "$H/config.yaml"', 1)[1].split('chown -R', 1)[0]
+        with tempfile.TemporaryDirectory() as tmp:
+            config_file = pathlib.Path(tmp) / 'config.yaml'
+            config_file.write_text('official defaults')
+            config_file.chmod(0o644)
+            env = dict(os.environ, H=tmp, MODEL_YAML='"test-model"', BASE_URL_YAML='"http://localhost/v1"',
+                       API_KEY_YAML='"TEST_ONLY"', API_SERVER_KEY='TEST_ONLY', CFG_TG_TOKEN='', CFG_TG_ADMIN='')
+            result = subprocess.run(['bash', '-euc', stage], env=env, capture_output=True, text=True)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertEqual(config_file.stat().st_mode & 0o777, 0o600)
+            self.assertIn('test-model', config_file.read_text())
+
 if __name__ == '__main__':
     unittest.main()

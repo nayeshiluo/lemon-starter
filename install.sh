@@ -48,10 +48,18 @@ if [ "$TOTAL_MEM" -lt 1500 ] && [ ! -f /swapfile ] && [ "$(free -m | awk '/Swap:
   echo "  ✓ 1GB Swap 启用成功"
 fi
 
+# Swap 不会提高 Node 自动计算的堆上限；低内存构建需显式设置。
+configure_build_memory() {
+  if [ "$TOTAL_MEM" -lt 1500 ] && [ -z "${NODE_OPTIONS:-}" ]; then
+    export NODE_OPTIONS="--max-old-space-size=512"
+  fi
+}
+configure_build_memory
+
 # 2. 安装基础依赖与 xz-utils, Node.js
 echo ">> [1/6] 安装系统依赖 (curl, git, xz-utils, sqlite3, systemd)..."
 $SUDO apt-get update -y
-$SUDO apt-get install -y curl git tar gzip xz-utils sqlite3 ca-certificates jq systemd openssl python3
+$SUDO apt-get install -y curl git tar gzip xz-utils sqlite3 ca-certificates jq systemd openssl python3 build-essential
 
 if ! command -v node &>/dev/null || [ "$(node -v | cut -d. -f1 | tr -d 'v')" -lt 24 ]; then
   echo "安装 Node.js 24.x（Web UI 0.6.44 要求 Node >=23）..."
@@ -64,7 +72,7 @@ echo ">> [2/6] 安装 Hermes Agent 核心与 Python/uv 环境..."
 if [ "$(whoami)" = "$TARGET_USER" ]; then
   curl -fsSL https://hermes-agent.nousresearch.com/install.sh | bash
 else
-  su - "$TARGET_USER" -c 'curl -fsSL https://hermes-agent.nousresearch.com/install.sh | bash'
+  su --whitelist-environment=NODE_OPTIONS - "$TARGET_USER" -c 'curl -fsSL https://hermes-agent.nousresearch.com/install.sh | bash'
 fi
 
 # 确保环境变量
@@ -75,7 +83,14 @@ mkdir -p "$H" "$H/skills"
 
 # 4. 安装 Hermes Web UI 网页控制台
 echo ">> [3/6] 安装 Hermes Web UI 网页控制台..."
-$SUDO npm install -g --allow-scripts=agent-browser,node-pty,protobufjs,vue-demi hermes-web-ui@0.6.44
+install_webui() {
+  (
+    # 全局公共程序须供服务用户读取；后续秘密仍使用外层 umask 077。
+    umask 022
+    $SUDO npm install -g --allow-scripts=agent-browser,node-pty,protobufjs,vue-demi hermes-web-ui@0.6.44
+  )
+}
+install_webui
 
 # 5. 部署全量扩展技能树
 echo ">> [4/6] 部署扩展技能树 (Skills)..."
@@ -256,6 +271,7 @@ EOF
   fi
 fi
 
+chmod 600 "$H/config.yaml"
 chown -R "$TARGET_USER:$TARGET_USER" "$H"
 chmod 700 "$H"
 
@@ -333,6 +349,7 @@ Wants=network-online.target
 
 [Service]
 Type=simple
+UMask=0077
 User=$TARGET_USER
 WorkingDirectory=$USER_HOME
 ExecStart=$HERMES_BIN gateway
@@ -363,6 +380,7 @@ Wants=network-online.target hermes-gateway.service
 
 [Service]
 Type=simple
+UMask=0077
 User=$TARGET_USER
 Group=$TARGET_USER
 WorkingDirectory=$WEB_UI_DIR
