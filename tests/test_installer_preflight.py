@@ -122,5 +122,43 @@ class InstallerGatewayTests(unittest.TestCase):
             self.assertNotIn('INSTALL_SUCCESS', result.stdout)
 
 
+class InstallerPromptTests(unittest.TestCase):
+    def run_prompt(self, name, call):
+        return subprocess.run(['bash', '-euc', function(name) + '\n' + call],
+                              stdin=subprocess.DEVNULL, capture_output=True, text=True,
+                              start_new_session=True, timeout=5)
+
+    def test_no_terminal_optional_prompt_uses_default(self):
+        result = self.run_prompt('prompt_input', 'prompt_input optional "fallback" value; printf "%s" "$value"')
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(result.stdout, 'fallback')
+        self.assertEqual(result.stderr, '')
+
+    def test_no_terminal_missing_secret_reaches_config_validation(self):
+        call = 'prompt_secret key CFG_API_KEY\n' + function('validate_installer_config') + '\nvalidate_installer_config'
+        env = dict(os.environ, CFG_MODEL='test', CFG_BASE_URL='https://example.com', CFG_TG_TOKEN='', CFG_TG_ADMIN='')
+        result = subprocess.run(['bash', '-euc', function('prompt_secret') + '\n' + call],
+                                env=env, stdin=subprocess.DEVNULL, capture_output=True,
+                                text=True, start_new_session=True, timeout=5)
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn('API Key 不能为空', result.stderr)
+        self.assertNotIn('/dev/tty', result.stderr)
+
+    def test_interactive_terminal_still_reads_input(self):
+        import pty
+        master, slave = pty.openpty()
+        try:
+            process = subprocess.Popen(['bash', '-euc', function('prompt_input') +
+                                       '\nprompt_input model fallback value; printf "%s" "$value"'],
+                                       stdin=slave, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            os.write(master, b'interactive-model\n')
+            stdout, stderr = process.communicate(timeout=5)
+            self.assertEqual(process.returncode, 0, stderr)
+            self.assertEqual(stdout, b'interactive-model')
+        finally:
+            os.close(master)
+            os.close(slave)
+
+
 if __name__ == '__main__':
     unittest.main()

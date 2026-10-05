@@ -18,7 +18,7 @@ STARTER_REVISION="$(git rev-parse HEAD)" bash install.sh
 
 向导需要模型名称、兼容 API Base URL 和 Key。Telegram 可跳过；填写 Bot Token 后必须填写自己的正整数管理员 ID，留空或格式错误会在写入配置前停止。配置值不允许换行，秘密不作为 Python 命令行参数传递。
 
-无人值守安装可预设 `MODEL_NAME`、`BASE_URL`、`API_KEY`、`TELEGRAM_BOT_TOKEN`、`TELEGRAM_ADMIN_ID`。不要把实际密钥提交到仓库或公开安装日志。
+无人值守安装可预设 `MODEL_NAME`、`BASE_URL`、`API_KEY`、`TELEGRAM_BOT_TOKEN`、`TELEGRAM_ADMIN_ID`。没有可用交互终端时，可选项使用默认值；缺少 API Key 会明确报错，不尝试读取不可用的终端。不要把实际密钥提交到仓库或公开安装日志。
 
 ## Web UI 安全访问
 
