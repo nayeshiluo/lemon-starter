@@ -116,7 +116,7 @@ prompt_input() {
 
   if [ -t 0 ]; then
     read -r -p "$prompt_text [$default_val]: " input
-  elif [ -e /dev/tty ]; then
+  elif ( : </dev/tty ) 2>/dev/null; then
     read -r -p "$prompt_text [$default_val]: " input </dev/tty
   fi
 
@@ -131,7 +131,7 @@ prompt_secret() {
 
   if [ -t 0 ]; then
     read -r -s -p "$prompt_text: " input; echo ""
-  elif [ -e /dev/tty ]; then
+  elif ( : </dev/tty ) 2>/dev/null; then
     read -r -s -p "$prompt_text: " input </dev/tty; echo ""
   fi
 
