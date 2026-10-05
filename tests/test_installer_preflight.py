@@ -80,5 +80,47 @@ class InstallerPreflightTests(unittest.TestCase):
                     self.assertNotIn('TEST_PRIVATE_VALUE', result.stdout + result.stderr)
 
 
+class InstallerGatewayTests(unittest.TestCase):
+    def run_gateway_stage(self, token, fail=False):
+        # Execute the real registration stage with an isolated systemctl stand-in.
+        stage = SOURCE.split('$SUDO systemctl daemon-reload', 1)[1].split('# 启动 Web UI', 1)[0]
+        with tempfile.TemporaryDirectory() as tmp:
+            stub = pathlib.Path(tmp) / 'systemctl'
+            log = pathlib.Path(tmp) / 'calls'
+            stub.write_text('#!/bin/bash\nprintf "%s\\n" "$*" >> "$CALL_LOG"\nexit "$CALL_EXIT"\n')
+            stub.chmod(0o700)
+            env = dict(os.environ, PATH=tmp + ':' + os.environ['PATH'],
+                       CFG_TG_TOKEN=token, SUDO='', CALL_LOG=str(log), CALL_EXIT='17' if fail else '0')
+            result = subprocess.run(['bash', '-euc', stage + '\necho STAGE_COMPLETE'],
+                                    env=env, capture_output=True, text=True)
+            return result, log.read_text().splitlines() if log.exists() else []
+
+    def test_gateway_starts_with_and_without_telegram(self):
+        for token in ['', 'TEST_BOT_TOKEN']:
+            with self.subTest(telegram=bool(token)):
+                result, calls = self.run_gateway_stage(token)
+                self.assertEqual(result.returncode, 0, result.stderr)
+                self.assertIn('enable --now hermes-gateway', calls)
+
+    def test_failed_gateway_start_stops_installation(self):
+        result, calls = self.run_gateway_stage('', fail=True)
+        self.assertEqual(result.returncode, 17)
+        self.assertNotIn('STAGE_COMPLETE', result.stdout)
+
+    def test_boot_dependency_and_final_health_check_are_unconditional(self):
+        unit = SOURCE.split('Description=Hermes Web UI Service', 1)[1].split('EOF', 1)[0]
+        self.assertIn('Wants=network-online.target hermes-gateway.service', unit)
+        final = SOURCE.split('$SUDO systemctl is-active --quiet hermes-web-ui', 1)[1].split('echo ""', 1)[0]
+        with tempfile.TemporaryDirectory() as tmp:
+            stub = pathlib.Path(tmp) / 'systemctl'
+            stub.write_text('#!/bin/bash\nexit 19\n')
+            stub.chmod(0o700)
+            env = dict(os.environ, PATH=tmp + ':' + os.environ['PATH'], SUDO='', CFG_TG_TOKEN='')
+            result = subprocess.run(['bash', '-euc', final + '\necho INSTALL_SUCCESS'],
+                                    env=env, capture_output=True, text=True)
+            self.assertEqual(result.returncode, 19)
+            self.assertNotIn('INSTALL_SUCCESS', result.stdout)
+
+
 if __name__ == '__main__':
     unittest.main()
