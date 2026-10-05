@@ -57,3 +57,9 @@ python3 tools/public_skills_guard.py skills_bundle.tar.gz skills_bundle.manifest
 - `sudo systemctl status hermes-web-ui` 查看面板；`journalctl -u hermes-web-ui` 查看服务日志。
 - 安装器不负责覆盖升级既有实例；先备份配置、数据库和服务，再单独规划迁移。
 - 安全历史重写后，旧克隆应重新克隆，避免把旧的敏感历史推回。生产部署与私人备份不应从公开技能包恢复秘密。
+
+### 低内存安装与运行权限
+
+低于 1500 MB 内存且未自定义 NODE_OPTIONS 时，安装器将 Node 构建堆上限设为 512 MB，并在切换目标用户时保留设置。Swap 本身不会提高 Node 的默认堆上限；已有自定义选项保持不变。
+
+系统依赖包含 build-essential，供 Web UI 原生模块编译使用。全局公共程序以可供服务用户读取的权限安装；秘密配置保持 600，两个 systemd 服务使用 UMask=0077，避免运行时重写文件扩大权限。
