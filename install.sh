@@ -346,9 +346,8 @@ WantedBy=multi-user.target
 EOF
 
 $SUDO systemctl daemon-reload
-if [ -n "$CFG_TG_TOKEN" ]; then
-  $SUDO systemctl enable --now hermes-gateway
-fi
+# Web UI 同样需要网关；Telegram 仅控制通信渠道，不能控制网关是否启动。
+$SUDO systemctl enable --now hermes-gateway
 
 # 启动 Web UI 控制面板 (注册 systemd 守护进程以保障开机自启与崩溃自愈)
 NODE_BIN="$(command -v node || echo /usr/bin/node)"
@@ -360,7 +359,7 @@ if [ -d "$WEB_UI_DIR" ]; then
 [Unit]
 Description=Hermes Web UI Service
 After=network-online.target hermes-gateway.service
-Wants=network-online.target
+Wants=network-online.target hermes-gateway.service
 
 [Service]
 Type=simple
@@ -399,7 +398,7 @@ if ! python3 "$WORKDIR/bootstrap_webui.py" --credentials "$H/webui-initial-login
 fi
 chown "$TARGET_USER:$TARGET_USER" "$H/webui-initial-login.json"
 $SUDO systemctl is-active --quiet hermes-web-ui
-if [ -n "$CFG_TG_TOKEN" ]; then $SUDO systemctl is-active --quiet hermes-gateway; fi
+$SUDO systemctl is-active --quiet hermes-gateway
 
 echo ""
 echo "=========================================================="

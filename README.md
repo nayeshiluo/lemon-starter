@@ -24,6 +24,8 @@ STARTER_REVISION="$(git rev-parse HEAD)" bash install.sh
 
 面板只监听 `127.0.0.1:8648`，无需在云安全组开放公网 8648。首次启动通过本机 API 将初始账号改为随机强密码，并验证新密码登录。初始化失败会停止面板并明确报错。
 
+Hermes 网关统一由 systemd 启动和管理，即使跳过 Telegram 也会启动，并在安装结束时检查状态。Web UI 的开机启动会同时请求启动网关；Telegram 是可选通信渠道。
+
 账号为 `admin`。初始随机密码保存在 `~/.hermes/webui-initial-login.json`，权限 600；请通过自己的 SSH 终端读取，不要转发此文件。
 
 在电脑建立 SSH 通道后访问 `http://127.0.0.1:8648`：
