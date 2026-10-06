@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "bundle_sha256": "00930ff991f69d3849e433cc69a3318fa3c0696cc5861002aa082d9ed11cdda3",
+  "bundle_sha256": "f277e7d43a4291f2b5f45e37f6ba13eb5e2bd0c9b96eec3ae68285bef684d128",
   "output_hashes": {
     "skills/apikey-image-gen/SKILL.md": "eb6ac7abad277a9e87fde0b7605542a7868cf4d1221b3472ad3769797f547057",
     "skills/apple/DESCRIPTION.md": "c9537e578d68950224dbc09a425497a780e8c3956db9cb38a97b4a9e985516b3",
@@ -456,7 +456,7 @@
     "skills/mlops/inference/serving-llms-vllm/references/troubleshooting.md": "307acd908e60674017bd2363726e6b9be19410062e3db0645290a69802976283",
     "skills/mlops/models/DESCRIPTION.md": "97a8c2c6c7f4dcbb01a067b4f1df7d4ac790d1e134f449c604afc68695cd655d",
     "skills/networking/cf-node-ops/SKILL.md": "f20040d3e93b3057ea1a7d7da63403d58f66ed142b16d0b241f09ea6f74bbad9",
-    "skills/networking/cliproxyapi/SKILL.md": "29842206b2cd10da06273b8503e5a3d381320204060abef83ab4a78af543bd65",
+    "skills/networking/cliproxyapi/SKILL.md": "2a4c22342c50e58aa34a56e8c4f37292ec47feaa06b4d603561c51713d368659",
     "skills/networking/cliproxyapi/references/quota-exhaustion-diagnosis.md": "9d4ad49aca77c1c6ee9e92ec212bd8493da182a13405659332bb2dbdd998f114",
     "skills/networking/cliproxyapi/references/remote-oauth-login.md": "0e9f6def03aeb7545eda99b47b256adec49631f242f9fba83dda357d8dba212a",
     "skills/networking/cliproxyapi/references/restore-from-archive.md": "ede18dd3306478a2c50ccd5aad20e3d63184c876db4c592b86cc3e9daa8d8c85",
