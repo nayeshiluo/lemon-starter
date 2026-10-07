@@ -1,0 +1,22 @@
+name: Public skills security checks
+
+"on":
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  public-skills-guard:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - name: Verify bundle integrity and scan archive members
+        run: python3 tools/public_skills_guard.py skills_bundle.tar.gz skills_bundle.manifest.json
+      - name: Run security and installer regressions
+        run: python3 -m unittest discover -s tests -v
