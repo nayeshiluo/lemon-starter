@@ -12,6 +12,54 @@ def archive(entries):
     return buf.getvalue()
 
 class CredentialRegression(unittest.TestCase):
+    def test_telegram_positional_application_hash_is_detected(self):
+        value='ab'*16
+        for call in [f"TelegramClient('example.session', 12345, '{value}')",
+                     f'TelegramClient(session_path, api_id, "{value}")',
+                     f"telethon.TelegramClient(\n session_path,\n 12345,\n '{value}')"]:
+            with self.subTest(call=call.replace(value,'[REDACTED]')):
+                self.assertEqual(inspect_text(call,'fixture.py')[0]['type'],
+                                 'telegram_client_api_hash')
+        self.assertFalse(inspect_text("TelegramClient(path, int(os.getenv('TG_API_ID')), os.environ['TG_API_HASH'])",'fixture.py'))
+
+    def test_telegram_application_hash_definitions_are_detected(self):
+        value='ab'*16
+        cases=[
+            f"API_HASH = '{value}'",
+            f'TG_API_HASH={value}',
+            f'export TELEGRAM_API_HASH="{value}"',
+            '{"api_hash": "'+value+'"}',
+            f'api_hash: {value}',
+            f'API_HASH: str = "{value}"',
+            f'API_HASH = os.getenv("TG_API_HASH", "{value}")',
+            f'API_HASH = os.environ.get("TG_API_HASH", "{value}")',
+            f'API_HASH =\n    "{value}"',
+        ]
+        for text in cases:
+            with self.subTest(text=text.replace(value,'[REDACTED]')):
+                self.assertEqual(inspect_text(text,'fixture.py'),[
+                    {'path':'fixture.py','line':1,'type':'telegram_api_hash'}])
+
+    def test_telegram_hash_runtime_config_and_checksums_are_not_secrets(self):
+        cases=[
+            'API_HASH = os.getenv("TG_API_HASH", "")',
+            'API_HASH = os.environ["TG_API_HASH"]',
+            'TG_API_HASH=<YOUR_TG_API_HASH>',
+            'TG_API_HASH=YOUR_TELEGRAM_API_HASH',
+            '{"skills/API_HASH.py": "'+('ab'*32)+'"}',
+            'API_HASH="'+('ab'*32)+'"',
+        ]
+        for text in cases:
+            with self.subTest(text=text):self.assertFalse(inspect_text(text,'fixture.py'))
+
+    def test_telegram_hash_in_archive_is_rejected_without_disclosure(self):
+        value='ab'*16
+        data=archive([('skills/harvester/isolated_tg.py',
+                      ("API_HASH = '"+value+"'").encode(),'file')])
+        with self.assertRaises(GuardError) as caught:inspect_archive(data)
+        self.assertIn('telegram_api_hash',str(caught.exception))
+        self.assertNotIn(value,str(caught.exception))
+
     def test_original_bypass_formats_are_detected(self):
         cases=[
             'api_key=sk-'+('Q'*40),

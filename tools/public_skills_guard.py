@@ -20,6 +20,15 @@ PATTERNS = {
     'oauth_token': re.compile(r'ya29\.[A-Za-z0-9_.-]{20,}'),
     'aws_access_key': re.compile(r'\b(?:AKIA|ASIA)[A-Z0-9]{16}\b'),
     'telegram_token': re.compile(r'(?<![\w])\d{7,12}:[A-Za-z0-9_-]{30,50}'),
+    'telegram_api_hash': re.compile(
+        r'''(?i)\b(?:[a-z][a-z0-9]*_)*api_hash\b["']?\s*'''
+        r'''(?::\s*str\s*)?(?:=|:)\s*'''
+        r'''(?:os\.(?:getenv|environ\.get)\(\s*["'][^"']+["']\s*,\s*)?'''
+        r'''["'`]?([a-f0-9]{32})(?![a-f0-9])'''
+    ),
+    'telegram_client_api_hash': re.compile(
+        r'''\bTelegramClient\s*\(\s*[^,\n]+,\s*[^,\n]+,\s*["']([a-fA-F0-9]{32})["']'''
+    ),
     'private_key': re.compile(r'-----BEGIN (?:RSA |EC |OPENSSH |ENCRYPTED |DSA )?PRIVATE KEY-----'),
     'jwt': re.compile(r'eyJ[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{8,}'),
     'mtg_secret': re.compile(r'\bee[0-9a-fA-F]{32,}\b'),
