@@ -1,65 +1,103 @@
 # Hermes Agent 开源安装套件
 
-包含安装脚本、112 个技能的公开模板和 Hermes Web UI。公开套件用于全新安装；完整生产配置、密钥、会话和数据库需要独立的加密备份。
+全新安装用脚本、112 个技能的公开模板和 Hermes Web UI。私人配置、会话、数据库及恢复密钥须另行加密备份，公开套件不能替代它们。
 
-2026-10-04 安全更新：技能包已移除本轮发现的实际部署凭证；历史可见分支已脱敏重写。旧代理密钥已轮换。历史重写无法撤回他人已下载的内容或 GitHub 缓存，发现过的秘密应按已泄露处理。
+## 安装前审核
 
-## 安装
+只在全新 Ubuntu / Debian 上安装，使用专用普通用户配合 sudo，拒绝让 Agent 以 root 身份运行。脚本会拒绝已有配置、Web UI 数据、服务与覆盖配置，以及相关符号链接。推荐先在一次性隔离主机上使用测试凭据。
 
-仅在全新 Ubuntu / Debian 主机上使用，推荐普通用户配合 sudo。已有 `.env`、`config.yaml`、Web UI 数据、网关/面板服务或其 systemd 覆盖配置时，脚本会停止；相关路径为符号链接时也会停止，避免覆盖现有配置。
+先克隆仓库，选择并审核一个完整提交，包括 `install.sh`、`tools/public_skills_guard.py`、`tools/bootstrap_webui.py`、`tools/sync_telegram_menu.py` 以及技能包内容。审核之后固定该提交，不要把“选择最新提交”当作审核。
 
 ```bash
 git clone https://github.com/nayeshiluo/lemon-starter.git
 cd lemon-starter
+git checkout <已审核的完整提交SHA>
+```
+
+NodeSource 与 Hermes 官方安装器仍属于第三方代码。先下载、阅读，再记录自己审核版本的 SHA-256；也可使用可信维护者另行提供的摘要。对同一次下载自动计算摘要再自动执行，只能证明一致性，不能证明可信。
+
+```bash
+curl -fsSL https://hermes-agent.nousresearch.com/install.sh -o /tmp/hermes-official.review.sh
+curl -fsSL https://deb.nodesource.com/setup_24.x -o /tmp/nodesource.review.sh
+# 阅读两个脚本及其后续下载/执行行为后，记录审核摘要：
+sha256sum /tmp/hermes-official.review.sh /tmp/nodesource.review.sh
+```
+
+将上一步的审核摘要填入下面命令；已有 Node.js >=24 时无需 NodeSource 摘要。脚本缺少固定提交或必要摘要就会在系统修改前停止；上游内容变化时停止，须重新审核。
+
+```bash
+export HERMES_INSTALLER_SHA256='<已审核Hermes安装器的64位SHA256>'
+export NODESOURCE_SETUP_SHA256='<已审核NodeSource脚本的64位SHA256>'
 STARTER_REVISION="$(git rev-parse HEAD)" bash install.sh
 ```
 
-先阅读下载的脚本。安装所用技能包、清单和校验代码全部从这个固定提交获取，Web UI 固定为 `0.6.44`，其声明要求 Node.js `>=23`；套件为较旧环境安装 Node.js 24.x。技能解包前核对文件清单、内容摘要、凭证格式及路径安全。Node.js 与 Hermes 官方安装器仍是外部依赖，应按其发布流程评估；此套件不代表对第三方依赖的全面安全认证。
+仓库资源由固定提交的本地 Git 对象读取，安装器自身必须与指定提交完全一致；不会回退最新 main，也不会在运行时重新下载仓库 Python 后执行。运行需预先具备 git、curl、python3、sha256sum；由 git clone 准备代码的主机通常已经具备 git。
 
-向导需要模型名称、兼容 API Base URL 和 Key。Telegram 可跳过；填写 Bot Token 后必须填写自己的正整数管理员 ID，留空或格式错误会在写入配置前停止。配置值不允许换行，秘密不作为 Python 命令行参数传递。
+**信任边界：** 包、清单、扫描器来自同一审核快照，摘要和扫描是完整性及已知风险检查，不是独立签名或无后门证明。第三方安装器的后续下载、软件仓库内容和 npm 传递依赖仍未全部固定。Web UI 固定 `0.6.44`，npm 明确允许 agent-browser、node-pty、protobufjs、vue-demi 四个包的安装脚本以支持实际构建；这些脚本及后续网络行为仍需信任上游。本项目没有声称实现完全可复现的依赖供应链。
 
-无人值守安装可预设 `MODEL_NAME`、`BASE_URL`、`API_KEY`、`TELEGRAM_BOT_TOKEN`、`TELEGRAM_ADMIN_ID`。没有可用交互终端时，可选项使用默认值；缺少 API Key 会明确报错，不尝试读取不可用的终端。不要把实际密钥提交到仓库或公开安装日志。
+## 配置与权限
 
-## Web UI 安全访问
+向导需要模型名称、兼容 API Base URL 和 Key。Telegram 可跳过；填写 Bot Token 后必须填写自己的正整数管理员 ID。配置值不允许换行。无人值守可设 `MODEL_NAME`、`BASE_URL`、`API_KEY`、`TELEGRAM_BOT_TOKEN`、`TELEGRAM_ADMIN_ID`；无可用终端时可选项使用默认值，缺少 API Key 明确失败。不要把真实密钥写进公开日志或 shell 历史。
 
-面板只监听 `127.0.0.1:8648`，无需在云安全组开放公网 8648。首次启动通过本机 API 将初始账号改为随机强密码，并验证新密码登录。初始化失败会停止面板并明确报错。
+模型 Key 仅写入权限 600 的 `config.yaml`，保留 Hermes 自定义端点实际支持的 `model.api_key`，不再同时复制到 `.env` 的 CUSTOM/OPENAI 两个字段。Telegram 与本机 API 凭据写在权限 600 的 `.env`。两个服务设置 `UMask=0077`、`NoNewPrivileges=true`；Agent 从服务内执行 sudo 等提权会被拒绝，需由人类在 SSH 终端单独完成系统管理。
 
-Hermes 网关统一由 systemd 启动和管理，即使跳过 Telegram 也会启动，并在安装结束时检查状态。Web UI 的开机启动会同时请求启动网关；Telegram 是可选通信渠道。
+私聊和群聊的普通用户命令均仅 `help,whoami`。模型切换、重置、终止、总结仍由管理员授权逻辑控制；完整菜单只注册到指定所有者的私聊，普通群菜单只列两个查询命令。菜单可见性本身不授予权限。Telegram 中非命令消息的授权仍取决于 Hermes 网关版本和配置，必须另做实际集成验证。
 
-账号为 `admin`。初始随机密码保存在 `~/.hermes/webui-initial-login.json`，权限 600；请通过自己的 SSH 终端读取，不要转发此文件。
+技能、网页和群消息均是可能含不可信指令的输入。提示词、普通用户身份及 NoNewPrivileges 无法隔离该用户可读写的所有数据；应让专用服务用户没有其他业务秘密，不授予它额外管理权限。技能包安装只写文件，不自动执行技能脚本。
 
-在电脑建立 SSH 通道后访问 `http://127.0.0.1:8648`：
+## Web UI 和本机 API
+
+Web UI 显式监听 `127.0.0.1:8648`；Hermes API 在配置、环境及服务中显式固定 `127.0.0.1:8642`，无需开放这些公网端口。CORS 仅允许本机面板来源。
+
+Web UI 首次启动用本机 API 将初始账号改为随机强密码并验证登录。初始化工具禁用环境代理、拒绝重定向，只接受数值回环地址，防止凭据被转发。随机密码先保存为 600 并落盘；失败后复用已有密码，不覆盖或丢弃。初始化失败停止面板，保留现场，不报安装成功。
+
+账号为 `admin`，初始随机密码保存在 `~/.hermes/webui-initial-login.json`；通过自己的 SSH 终端读取，不转发。用 SSH 通道访问：
 
 ```bash
 ssh -L 8648:127.0.0.1:8648 用户名@服务器地址
 ```
 
-iPhone / iPad 使用支持本地端口转发的 SSH 客户端，配置本地 8648 → 服务器 `127.0.0.1:8648`，保持连接后用 Safari 访问本机地址。需要域名访问时，另行配置 HTTPS、鉴权与访问限制；不要直接改为默认弱密码的公网 HTTP 面板。
+iPhone / iPad 可用支持本地转发的 SSH 客户端建立本地 8648 → 服务器 `127.0.0.1:8648`，保持连接后由 Safari 访问。需要域名访问时另行配置 HTTPS、鉴权和访问限制。
 
-## 公开技能快照与自动检查
+安装结束检查服务状态，但进程存活不等于模型调用、Telegram 收发已验收。安装后必须检查实际监听和功能：
 
-`skills_bundle.manifest.json` 列出已审核公开文件的内容摘要；`SHA256SUMS` 提供包摘要。112 是技能数量，不等于全部技能、外部 API 或依赖已经功能验收。
+```bash
+ss -tlnp | grep -E ':(8642|8648)\b'
+hermes doctor
+```
 
-发布端使用私有审批清单：源文件和公开输出必须同时与已审核摘要一致。新增、删除、修改技能，未知文件、私钥、会话文件、嵌套压缩包、无法解码的文件或扫描错误都会阻止任务。日志仅输出位置与类型，不输出秘密原文。未审内容不自动进入公开仓库；需要复审后更新快照及私有审批清单。
+确认没有 `0.0.0.0` / `[::]` 监听，验证面板新密码、实际模型调用、自己的 Telegram 私聊，以及普通群成员无法执行 model/clear/stop/summary。不要在有生产配置的主机上运行安装器做这种测试。
 
-正常每日任务会核对源树、公开包和远端提交；没有变化时复用同一个已审核快照，不制造仅时间戳变化的重复发布。生产技能、模型路由和运行中的机器人不受此公开导出策略改变。
+## 失败恢复
 
-安全回归测试：
+脚本不允许用重跑覆盖既有实例。菜单同步移到核心服务初始化之后；失败明确显示 `FAILED` 并写入 `~/.hermes/starter-tools/telegram-menu-status`，不会阻止核心服务注册。以服务用户重试菜单即可，不需要删除配置：
+
+```bash
+python3 ~/.hermes/starter-tools/sync_telegram_menu.py --env-file ~/.hermes/.env
+```
+
+面板初始化失败后，以服务用户运行保留的初始化工具；面板仅回环监听，可先启动，初始化失败必须再次停止：
+
+```bash
+sudo systemctl start hermes-web-ui
+if ! python3 ~/.hermes/starter-tools/bootstrap_webui.py --credentials ~/.hermes/webui-initial-login.json; then
+  sudo systemctl stop hermes-web-ui
+fi
+```
+
+其余安装失败保留 700 临时目录和已有配置，依据具体阶段诊断、备份后恢复；没有任意阶段自动续装或自动清理功能。初始化工具只适用于本次安装产生的凭据，不重置既有面板账号。
+
+## 公开快照、检查与恢复边界
+
+`skills_bundle.manifest.json` 记录审核公开文件摘要，`SHA256SUMS` 记录包摘要。112 是技能数量，不等于全部技能、外部 API 或依赖已经功能验收。
+
+生产端另有受保护审批清单，未知文件、未审核变更、敏感格式、路径异常或扫描错误会阻止发布；候选仍由所有者确认。更新安装器时也需协调远端提交和仓库文件基线。私人全量同步暂停状态不得由公开安装器改变。
 
 ```bash
 python3 -m unittest discover -s tests -v
 python3 tools/public_skills_guard.py skills_bundle.tar.gz skills_bundle.manifest.json
 ```
 
-## 运维与恢复
+曾发现的公开凭据须按泄露处理。清理当前文件、重写可见分支无法撤回第三方副本或 GitHub 缓存；凭据轮换和全历史处理仍须分别验证，不能因这轮安装器修复宣称旧风险全部消除。
 
-- `hermes doctor` 检查 Hermes。
-- `sudo systemctl status hermes-web-ui` 查看面板；`journalctl -u hermes-web-ui` 查看服务日志。
-- 安装器不负责覆盖升级既有实例；先备份配置、数据库和服务，再单独规划迁移。
-- 安全历史重写后，旧克隆应重新克隆，避免把旧的敏感历史推回。生产部署与私人备份不应从公开技能包恢复秘密。
-
-### 低内存安装与运行权限
-
-低于 1500 MB 内存且未自定义 NODE_OPTIONS 时，安装器将 Node 构建堆上限设为 512 MB，并在切换目标用户时保留设置。Swap 本身不会提高 Node 的默认堆上限；已有自定义选项保持不变。
-
-系统依赖包含 build-essential，供 Web UI 原生模块编译使用。全局公共程序以可供服务用户读取的权限安装；秘密配置保持 600，两个 systemd 服务使用 UMask=0077，避免运行时重写文件扩大权限。
+低于 1500 MB 内存且未自定义 NODE_OPTIONS 时，Node 构建堆上限设为 512 MB；自定义设置不覆盖。公共 npm 程序以 022 掩码安装，秘密配置保持 600。既有实例升级、数据库迁移、模型接入与私人灾难恢复须另行备份和验收。
