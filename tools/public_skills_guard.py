@@ -11,6 +11,9 @@ import json
 import pathlib
 import re
 import tarfile
+import os
+import stat
+import ipaddress
 
 PATTERNS = {
     'api_key': re.compile(r'\bsk-(?:proj-|ant-api\d+-)?[A-Za-z0-9_-]{24,}'),
@@ -35,12 +38,43 @@ PATTERNS = {
     'url_password': re.compile(r'\b(?:https?|socks5?|postgres(?:ql)?|mysql|redis)://[^\s:/<>]+:[^\s/@<>]+@'),
     'url_secret': re.compile(r'(?i)[?&](?:secret|token|api_key|password)=([A-Za-z0-9_-]{16,})'),
     'inline_password': re.compile(r'(?:密码|口令|密钥|secret)[\s：:]*`([^`\s]{4,})`', re.I),
+    'private_domain': re.compile(r'(?i)(?<![\w.-])(?:[a-z0-9-]+\.)+(?:xyz|ccwu\.cc)(?![\w.-])'),
+    'telegram_group_id': re.compile(r'(?<![\w])-100\d{7,13}(?![\w])'),
+    'user_identifier': re.compile(r'(?<![\w.-])\d{8,15}(?![\w.-])'),
+    'phone_number': re.compile(r'(?<![\w])\+[1-9]\d(?:[ -]?\d){7,14}(?![\w])'),
+    'ipv6_address': re.compile(r'(?<![\w:])(?:[0-9a-fA-F]{0,4}:){2,7}[0-9a-fA-F:.]{0,39}(?:%[\w.-]+)?(?![\w:])'),
 }
 TEXT_EXTENSIONS = {'.md','.json','.yaml','.yml','.py','.sh','.txt','.js','.mjs','.tex','.sty','.bst','.bib','.html','.service','.conf','.ini'}
 TEXT_NAMES = {'LICENSE','Makefile'}
 
 class GuardError(Exception):
     """Message is safe for logs: names and types, never matched values."""
+
+IDENTIFIER_FILE = pathlib.Path(os.environ.get('PUBLIC_SKILLS_IDENTIFIERS_FILE', pathlib.Path.home()/'.hermes/public-skills-private-identifiers.json'))
+
+def private_identifiers():
+    """Optional private runtime policy; literal values never belong in source."""
+    if not IDENTIFIER_FILE.exists():
+        if 'PUBLIC_SKILLS_IDENTIFIERS_FILE' in os.environ:
+            raise GuardError('private_identifier_policy_unavailable')
+        return ()
+    info=IDENTIFIER_FILE.lstat()
+    if not stat.S_ISREG(info.st_mode) or stat.S_IMODE(info.st_mode)&0o077:
+        raise GuardError('private_identifier_policy_permissions')
+    try:
+        values=json.loads(IDENTIFIER_FILE.read_text(encoding='utf-8'))
+        if not isinstance(values,list) or any(not isinstance(v,str) or len(v)<3 for v in values):
+            raise ValueError('invalid policy')
+    except (OSError,ValueError):
+        raise GuardError('private_identifier_policy_invalid') from None
+    return tuple(values)
+
+def is_private_ipv6(value):
+    try:
+        addr=ipaddress.ip_address(value.split('%',1)[0])
+    except ValueError:
+        return False
+    return addr.version==6 and not (addr.is_loopback or addr.is_unspecified or addr in ipaddress.ip_network('2001:db8::/32'))
 
 def sha(data):return hashlib.sha256(data).hexdigest()
 
@@ -57,10 +91,14 @@ def inspect_text(text,path):
     for kind,pattern in PATTERNS.items():
         for m in pattern.finditer(text):
             value=m.group(1) if m.lastindex else m.group()
+            if kind=='ipv6_address' and not is_private_ipv6(value):continue
             if placeholder(value):continue
             # Ignore shell/SQL expressions and config identifiers in prose.
             if kind=='inline_password' and (value.startswith(('$','os.getenv','root@')) or any(c in value for c in ('/','(',')','\\','='))):continue
             findings.append({'path':path,'line':text.count('\n',0,m.start())+1,'type':kind})
+    for value in private_identifiers():
+        for m in re.finditer(re.escape(value),text,re.I):
+            findings.append({'path':path,'line':text.count('\n',0,m.start())+1,'type':'private_identifier'})
     return findings
 
 def inspect_archive(data,expected_hashes=None,approved_pdf_hashes=()):
@@ -131,3 +169,4 @@ if __name__=='__main__':
         print(json.dumps({'scan':'PASS','files':len(files),'bundle_sha256':sha(data)}))
     except (GuardError,OSError,KeyError,ValueError) as e:
         print('FAILED: '+str(e),file=sys.stderr);sys.exit(1)
+
