@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "bundle_sha256": "c05c7ad420779f46dfe1c4024de443a677aa804944c2474753b8613de16c9a69",
+  "bundle_sha256": "3ca87d13a681d8de6bfac120250ae587b0b36fc0b74c87266e9e79992d3f579c",
   "output_hashes": {
     "skills/apikey-image-gen/SKILL.md": "eb6ac7abad277a9e87fde0b7605542a7868cf4d1221b3472ad3769797f547057",
     "skills/apple/DESCRIPTION.md": "c9537e578d68950224dbc09a425497a780e8c3956db9cb38a97b4a9e985516b3",
@@ -42,7 +42,7 @@
     "skills/autonomous-ai-agents/hermes-agent/templates/plugin.js": "a63c8f879756854b45373f5d6b1ae0a7fefcdd4a5af840be8a60d83b64724744",
     "skills/autonomous-ai-agents/hermes-agent/templates/skin.yaml": "bc8fddd7e5373b074c1c7dd423bb59d6e04769977e8a18354e3a6b3983209994",
     "skills/autonomous-ai-agents/hermes-backup/SKILL.md": "c93d3dc6dd98627f0dcba0755bb4415b5d351140b51d62afa0204278e3a144aa",
-    "skills/autonomous-ai-agents/hermes-custom-providers/SKILL.md": "6700ce4be7a04e4c8a4e03c81bcfb00589dd01c02e6f81a112387163f30661ab",
+    "skills/autonomous-ai-agents/hermes-custom-providers/SKILL.md": "5bcd476a897294665c6de46fcb6ed996c9110987d7b97b4da29766c1f7b248a6",
     "skills/autonomous-ai-agents/hermes-custom-providers/references/antigravity-gateway-provider-setup.md": "cff4b8b450c7b2d6c6b61b70ddfb9c4d05c9cafd2cbf968b720aa99d432f61b0",
     "skills/autonomous-ai-agents/hermes-custom-providers/references/antigravity-validation-required.md": "7791a5e7291a7cef518de3b55c707176a9f9b2127da2f738040b410cd6d99ea0",
     "skills/autonomous-ai-agents/hermes-custom-providers/references/append-custom-provider.md": "4dc13d0f84391a3a3ad2ba1c582f90659ff7bbd7c1e3005f6973ac0669ee1e1c",
@@ -57,6 +57,7 @@
     "skills/autonomous-ai-agents/hermes-custom-providers/references/newfouapi-provider-models.md": "0c0f28f8cea4418579184ed812f24e1eff40db694f529ac2ebd51f0e70591571",
     "skills/autonomous-ai-agents/hermes-custom-providers/references/nofx-justwoker-provider-notes.md": "a51242fde73d3e58632f6c1a906179ec1656e00f5565b907f42fdaed58c6bdde",
     "skills/autonomous-ai-agents/hermes-custom-providers/references/nofx-provider-models.md": "e6b6a814c3634316a19c1b20052386a1e51c93fa78a58eb2ded82b105e6fed9b",
+    "skills/autonomous-ai-agents/hermes-custom-providers/references/prank-honeypot-endpoint-detection.md": "2bddef96de5a3952787c32dbb1c84f7dfbc8c909edcaab8aca78878c9d3b21d4",
     "skills/autonomous-ai-agents/hermes-custom-providers/references/reasoning-effort-not-delivered-to-relays.md": "3847f0811af14851bdba449ef193b9a32a12b07f06717578f6a145e071c2edf1",
     "skills/autonomous-ai-agents/hermes-custom-providers/references/same-provider-key-fallback.md": "43842336612663adf0ff66d298cd96a9f472518768c6c5a985dc90db59ddd3c2",
     "skills/autonomous-ai-agents/hermes-custom-providers/references/share-provider-models.md": "51c597a13c1493619420b3ac84b0421fe56fa5e92bacb6c8180564a172743059",
@@ -410,7 +411,7 @@
     "skills/messaging/telegram-group-assistant/references/state-db-recovery.md": "cdd6799b05d9d78e431de58a21679d9bcd01f45402b25fd692bae7cb10d36907",
     "skills/messaging/telegram-group-assistant/references/summary-format-collapsible.md": "c38081dc141a5aa82967c71ec21e0ff97012496ea4835f17f7702630e521b13f",
     "skills/messaging/telegram-group-assistant/templates/media-relay-server.py": "eb18d2005a31f9ae6f815096807eaa62e68bd2437d25fe0ecf980bafd05b4101",
-    "skills/messaging/telegram-group-bot-suite/SKILL.md": "e70a1589a72ae3b955b1866f593485b91f489a12b550e88c9d5edc827dab25ee",
+    "skills/messaging/telegram-group-bot-suite/SKILL.md": "1f459ce00e5c33f43a1714edfe6ac8b4d564cf7b1d5fb2b240aa3a2fea41a5c2",
     "skills/messaging/telegram-group-bot-suite/references/dynamic-llm-pool-and-scheduled-summary.md": "fcda44b6d6da0830e8b80c4c9039f84b12722dc0e4369b2ddfb2458ea7f43847",
     "skills/messaging/telegram-group-bot-suite/references/group-summary-troubleshooting.md": "5ccfc3a6485344bef44cff7fb38632155b7e26c72ca67be98db23a6b265160d3",
     "skills/messaging/telegram-group-bot-suite/references/music-library-prewarm.md": "0890ad53c505d9279c6639b5dc549ce7b5bcfd7acc761a263b36167e0c884729",
