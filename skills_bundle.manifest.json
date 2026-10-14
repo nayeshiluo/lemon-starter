@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "bundle_sha256": "3ca87d13a681d8de6bfac120250ae587b0b36fc0b74c87266e9e79992d3f579c",
+  "bundle_sha256": "054ddad2828cc5a830f8c9d1bf0c10e07d33aed4cde84baabd589efa8266a42a",
   "output_hashes": {
     "skills/apikey-image-gen/SKILL.md": "eb6ac7abad277a9e87fde0b7605542a7868cf4d1221b3472ad3769797f547057",
     "skills/apple/DESCRIPTION.md": "c9537e578d68950224dbc09a425497a780e8c3956db9cb38a97b4a9e985516b3",
@@ -11,7 +11,7 @@
     "skills/autonomous-ai-agents/DESCRIPTION.md": "7f2427c7112d71235d92f68ba68392a4fed3d28a7636f522deb2748cb44fe7fc",
     "skills/autonomous-ai-agents/aws-ec2-ops/SKILL.md": "57c3e178125315525113c7f8d5fcbd7cd26bc997387d308ad040bffdbfbccc78",
     "skills/autonomous-ai-agents/aws-ec2-ops/references/cloudflare-ddns-setup.md": "4b1e61f7c0c602e7f7a760a663a0bc26eb3badc4e53d5870904b24de418df864",
-    "skills/autonomous-ai-agents/aws-ec2-ops/references/desktop-commander-remote-mcp-ops.md": "147c5d6d873c371e7aa3de0cf33f3449313ae252813562125041adcbaecb836d",
+    "skills/autonomous-ai-agents/aws-ec2-ops/references/desktop-commander-remote-mcp-ops.md": "a75442132b3f1148558a7e638e311d6bd37ee24451a4ee30e7d8962f57552db4",
     "skills/autonomous-ai-agents/aws-ec2-ops/references/security-group-inbound-diagnosis.md": "3000f5706568d9672ba04d0097cfb1d80bcb491ff6f64a8472ba7e13c578b978",
     "skills/autonomous-ai-agents/aws-ec2-ops/references/servercat-metrics-interpretation.md": "b1b86c0b970a8f9ec5d87e21154cfa117d804f41561d292f8db993f43704a09d",
     "skills/autonomous-ai-agents/aws-ec2-ops/scripts/ec2-instance-info.sh": "af05ac4cde9df92267f76793d0d4db92e06ae8be871b8e0d0e896441b7e4f2fe",
@@ -356,9 +356,10 @@
     "skills/media/crowdsourced-media-pipeline/references/production-checklist.md": "21cd2531bafce4a3ab719b6074b22d5d91416a2f52cffb9111d307bff066e176",
     "skills/media/crowdsourced-media-pipeline/references/social-economy-and-subtitle-pipeline.md": "b3cc1a65226eef6a2d684b05a7e518388de874cd9409830883bf7eb69ccae7cb",
     "skills/media/crowdsourced-media-pipeline/scripts/verify_spa_structure.py": "d591329302114fbfbb85269aadc2cbe156305551e82eff03ac54a7884b85aa1e",
-    "skills/media/emby-proxy-ops/SKILL.md": "4d001482f97121c000478e7ea139493d15796ba3f75b9fd97b9c7b095bff5482",
+    "skills/media/emby-proxy-ops/SKILL.md": "f77726a3884226160e7a684d60c1e84c35e88c11d2442d87d71b42d7afb5c17c",
     "skills/media/emby-proxy-ops/references/clean-vps-nginx-emby-7steps.md": "3b1bab86779f49a3c16809042ebcd25804daac8fbf03a5f4c51866f99d014746",
     "skills/media/emby-proxy-ops/references/emby-strm-302-smartstrm-setup.md": "b8c34a7572611052d99fce6dbaa20d23b88d58663de6a5285be2003e73dfaefd",
+    "skills/media/emby-proxy-ops/references/emby-token-exchange-script-review.md": "d059f7d66d5812e108096e075957005b7df18aca05b092c39fd8a658c9967ae6",
     "skills/media/emby-proxy-ops/references/emos-and-makkapakka.md": "275518a2afaf8c95a1397a74b13847b20fe48071fa2bc8c035c7100849e8ee4f",
     "skills/media/emby-proxy-ops/references/emos-instance-probing-and-gray-deploy.md": "a8cff68b1fe857f423f82bd09023e837fc5833e9d5cf00d2e92b75c0189923e5",
     "skills/media/emby-proxy-ops/references/emos-uploader-identify-fix.md": "f5ee02e8f1befd859e54543758f412a9b4591296f024143a3d42806d4ba37284",
