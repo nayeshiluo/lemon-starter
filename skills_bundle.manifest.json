@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "bundle_sha256": "054ddad2828cc5a830f8c9d1bf0c10e07d33aed4cde84baabd589efa8266a42a",
+  "bundle_sha256": "fc1bbba61a2c7db10126cdb535a3e389b5cdebdde3723d5378cbf98ade9421a0",
   "output_hashes": {
     "skills/apikey-image-gen/SKILL.md": "eb6ac7abad277a9e87fde0b7605542a7868cf4d1221b3472ad3769797f547057",
     "skills/apple/DESCRIPTION.md": "c9537e578d68950224dbc09a425497a780e8c3956db9cb38a97b4a9e985516b3",
@@ -85,7 +85,7 @@
     "skills/autonomous-ai-agents/hermes-gateway-ops/references/telegram-chat-id-discovery.md": "59b90dcfc09cae7ff87d9d6d379601bb792d4a17dd0376ae180e10c89df2ade5",
     "skills/autonomous-ai-agents/hermes-gateway-ops/references/telegram-command-menu-localization.md": "0f2495894038335c6825be6fe758369fb13a39ab5b8b09b55ada1b458b12f49c",
     "skills/autonomous-ai-agents/hermes-gateway-ops/references/telegram-dc-outage-and-sync-hang.md": "f45cdc517fa513570be4bc56c26bf385933e1c5eb81895afb022e4b46bcee4ae",
-    "skills/autonomous-ai-agents/hermes-gateway-ops/references/telegram-media-timeout.md": "503356259ebe26d95b09b07e62ab37c1839e442212f5eb6f2a8f1fa28e697bf3",
+    "skills/autonomous-ai-agents/hermes-gateway-ops/references/telegram-media-timeout.md": "17cae577169446b29ae9b81ca31cd79acbf2638069503269963c0dbe9ba72e9f",
     "skills/autonomous-ai-agents/hermes-gateway-ops/references/weixin-qr-pairing.md": "f4ce6f4d841d7baa4ef6c353de70081499e99f47aaf5f215ff098f80f8df839f",
     "skills/autonomous-ai-agents/hermes-gateway-ops/scripts/db_maintenance.py": "c478725185f477706ef28dec7291fde4f83d5049f2cad2b519d411ccfcd76165",
     "skills/autonomous-ai-agents/hermes-gateway-ops/scripts/state_db_watchdog.py": "bb472a6847d9c45421527cb35bc70b29481de571e092add4df0bd6ed9c7731d6",
