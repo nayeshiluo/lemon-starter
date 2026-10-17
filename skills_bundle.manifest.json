@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "bundle_sha256": "172a9b5961c891566e5393c2c159038de1807dc3a6daec98019f65d9be0dd53f",
+  "bundle_sha256": "7f5310a2a2033dd17dac9e04d7f66ec9d0ea4c1b430dabf1880271b0828aa3d6",
   "output_hashes": {
     "skills/apikey-image-gen/SKILL.md": "eb6ac7abad277a9e87fde0b7605542a7868cf4d1221b3472ad3769797f547057",
     "skills/apple/DESCRIPTION.md": "c9537e578d68950224dbc09a425497a780e8c3956db9cb38a97b4a9e985516b3",
@@ -56,7 +56,7 @@
     "skills/autonomous-ai-agents/hermes-custom-providers/references/ikun-provider-models.md": "9fdce1b4d0aabdedb5316e7a0bfe0e883f30d24b7d98ecf96d8cbbc7db666cc5",
     "skills/autonomous-ai-agents/hermes-custom-providers/references/lfree-bot-provider-notes.md": "1e30434008a826146d9c7ddec432ec9cedcd1150e6730f95802ba160c7e0df15",
     "skills/autonomous-ai-agents/hermes-custom-providers/references/new-api-bot-routing-endpoints.md": "da634e9be375ba4238bf7874c9c0b24ad97bc05894b2042c510111784068cfc9",
-    "skills/autonomous-ai-agents/hermes-custom-providers/references/newfouapi-provider-models.md": "0c0f28f8cea4418579184ed812f24e1eff40db694f529ac2ebd51f0e70591571",
+    "skills/autonomous-ai-agents/hermes-custom-providers/references/newfouapi-provider-models.md": "78f2916124968050306b84cc09989a4bd4ecfc6bf40eb40da6f52d10317b7d6b",
     "skills/autonomous-ai-agents/hermes-custom-providers/references/nofx-justwoker-provider-notes.md": "a51242fde73d3e58632f6c1a906179ec1656e00f5565b907f42fdaed58c6bdde",
     "skills/autonomous-ai-agents/hermes-custom-providers/references/nofx-provider-models.md": "e6b6a814c3634316a19c1b20052386a1e51c93fa78a58eb2ded82b105e6fed9b",
     "skills/autonomous-ai-agents/hermes-custom-providers/references/prank-honeypot-endpoint-detection.md": "2bddef96de5a3952787c32dbb1c84f7dfbc8c909edcaab8aca78878c9d3b21d4",
