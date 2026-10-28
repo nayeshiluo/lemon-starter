@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "bundle_sha256": "85852857a074b7a5329d16fcba5a15619183c9c99d7809eb167dc8b5e755006f",
+  "bundle_sha256": "3858e678e1e7a15f503382bb61563e5c88c3510f0cbc7c062cbf45c6d05d32ed",
   "output_hashes": {
     "skills/apikey-image-gen/SKILL.md": "a853f42c47732c3b0441414497579184fa5a6e2b7ee1e045669ee589955ac215",
     "skills/apple/DESCRIPTION.md": "c9537e578d68950224dbc09a425497a780e8c3956db9cb38a97b4a9e985516b3",
@@ -551,12 +551,13 @@
     "skills/messaging/telegram-group-bot-suite/scripts/verify_summary_chain.py": "28996feeda75a56e13c58473966a258f7353e8487f8c18fd116bb77588f2b4fc",
     "skills/messaging/telegram-group-bot-suite/templates/cf-worker-tgbot-media-parser.js": "3bed017c01ed96dcfeda5be2560f69106bc1e780361ab33e80ce7503f11de559",
     "skills/messaging/telegram-group-bot-suite/templates/standalone-quote-bot.py": "3d0ee426334be07d9423b31e409f92da4f0c65f8b06e7e3e4a523d581806b84a",
-    "skills/messaging/telegram-ops-bot/SKILL.md": "b92ccbd2da1d43df00a8f232e1c22be9a838eadd24455d39c6a388016d168025",
+    "skills/messaging/telegram-ops-bot/SKILL.md": "bf2c4b6e851a568249cd017566f6fb0e7e87fb974aa5b0afb072dcfdaa42199c",
     "skills/messaging/telegram-ops-bot/references/emby_userbot_architecture.md": "1b96d05593f895c3791e14e63be617e33335b7b6f96066cbf50688a05564e84c",
     "skills/messaging/telegram-ops-bot/references/media-naming-engine.md": "5d87158c8382a0c182339e770e4b5ed332eec8e2563eae765b553a090b38f297",
     "skills/messaging/telegram-ops-bot/references/media_spider_guangyapan.md": "01a46677e0142f08153affa2022f24fc6634d1fd818b15e3707f2ba190c1798c",
     "skills/messaging/telegram-ops-bot/references/monitoring-gaps-implementation.md": "b2a855a3998c41fb6184707cd4529ab30af73657b175beb163f299d9773ab868",
     "skills/messaging/telegram-ops-bot/references/ops-bot-security-audit.md": "c12261be0d569859c87e86b9b118b84d0daf876dd5976be9772d94f4f6834407",
+    "skills/messaging/telegram-ops-bot/references/starter-publication-pipeline.md": "4c357381e74440710bed4a72e24ad2b16aba142ad1572a09de836ad00c2bfa4e",
     "skills/messaging/telegram-ops-bot/references/video-reward-sites-automation.md": "4082f8a5964f9d9d7602cb7fe7f02384d14823f0bd9caed7ec3f724fc567dcf6",
     "skills/messaging/telegram-ops-bot/scripts/verify_handlers.py": "ae0ea1d7dee62423e4fa33620a303058ee294fa0004307325c8344ff40d7bb74",
     "skills/messaging/telegram-ops-bot/templates/lemon-ops.service": "aaef0790758a47a95911ec8656d1a23ecc481536719dfe4e5aefcf00510d0861",
