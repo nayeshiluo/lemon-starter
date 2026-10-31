@@ -45,7 +45,7 @@ PATTERNS = {
     'ipv6_address': re.compile(r'(?<![\w:])(?:[0-9a-fA-F]{0,4}:){2,7}[0-9a-fA-F:.]{0,39}(?:%[\w.-]+)?(?![\w:])'),
 }
 TEXT_EXTENSIONS = {'.md','.json','.yaml','.yml','.py','.sh','.txt','.js','.mjs','.tex','.sty','.bst','.bib','.html','.service','.timer','.conf','.ini'}
-TEXT_NAMES = {'LICENSE','Makefile','ib'}
+TEXT_NAMES = {'LICENSE','Makefile','ib','dshask','dshchat'}
 
 class GuardError(Exception):
     """Message is safe for logs: names and types, never matched values."""
