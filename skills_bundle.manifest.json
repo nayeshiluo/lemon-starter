@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "bundle_sha256": "882291c0a7908161ef1fa8439b42678eee3d81725eec3a22916accdee8e05a53",
+  "bundle_sha256": "b016c830ac2fb1fa62b1ea0576b71b0e93285c9c4d0dbdb97ef7a0c5cdc55964",
   "output_hashes": {
     "skills/apikey-image-gen/SKILL.md": "a853f42c47732c3b0441414497579184fa5a6e2b7ee1e045669ee589955ac215",
     "skills/apple/DESCRIPTION.md": "c9537e578d68950224dbc09a425497a780e8c3956db9cb38a97b4a9e985516b3",
@@ -194,6 +194,8 @@
     "skills/autonomous-ai-agents/hermes-token-usage-audit/SKILL.md": "0270dd2a80154c269df44abaa9f66391754dd645b379e42cd9d6dea7de56060f",
     "skills/autonomous-ai-agents/hermes-token-usage-audit/references/usage-audit-2026-11-06.md": "56ed15747441daa662f76d26911a4e117695425dc17617af5523be72e2b1394b",
     "skills/autonomous-ai-agents/hermes-token-usage-audit/scripts/usage_report.py": "20ab155c8f4b7028bfae0d2572946bd5e46e6f4e81ec3852ae3677dee525890e",
+    "skills/autonomous-ai-agents/hermes-webui-access-ops/SKILL.md": "eb56e1a9169b18afddc52f6a8022b86df8cc0d19195b57f4eb8ec72f1184d31b",
+    "skills/autonomous-ai-agents/hermes-webui-access-ops/references/webui-login-recovery-20261111.md": "6859fcd3a913288493bfeb0f28c9c8dc35cf345da0f2781afabc052ff28c38a1",
     "skills/autonomous-ai-agents/merge-reconciler/SKILL.md": "24ffd1be973b0e884876fe0db9f49783fffe6a2337a4e74a83cdd895cb6fce23",
     "skills/autonomous-ai-agents/model-usage-attribution/SKILL.md": "4b9a5303ac31b00eb7f304f4d714b12e2514faca8f6e5fcea979f22701984cb7",
     "skills/autonomous-ai-agents/model-usage-attribution/scripts/usage_report.py": "26ca9dc115044077f234487609b1f1bb35f53775b453295604e36fd2aeaf0894",
