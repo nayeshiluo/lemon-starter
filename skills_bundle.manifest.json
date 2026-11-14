@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "bundle_sha256": "b016c830ac2fb1fa62b1ea0576b71b0e93285c9c4d0dbdb97ef7a0c5cdc55964",
+  "bundle_sha256": "4bbff4e02f8555d27d8a2616656386ada93627c71acd61acd2ffba40a2ae0220",
   "output_hashes": {
     "skills/apikey-image-gen/SKILL.md": "a853f42c47732c3b0441414497579184fa5a6e2b7ee1e045669ee589955ac215",
     "skills/apple/DESCRIPTION.md": "c9537e578d68950224dbc09a425497a780e8c3956db9cb38a97b4a9e985516b3",
@@ -474,6 +474,7 @@
     "skills/devops/selfhosted-service-audit/references/cross-host-model-credential-dependencies.md": "fabdeb3074c36cabff57f9e509038de920b9c0dc8646c0178a0886d8e359fdca",
     "skills/devops/selfhosted-service-audit/references/external-exposure-audit.md": "380d4e629aab80564baf54348ffd88dd3988d0fc6ef31a40bf0d899bc90aa359",
     "skills/devops/selfhosted-service-audit/references/feature-retirement-checklist.md": "ea8ea76331089b051584de97c2929d82125a606342f5d61d94f23db90c058425",
+    "skills/devops/selfhosted-service-audit/references/full-project-decommission.md": "6052a911d37dbcbe315ddeded1950fb42255f498b54ae25d37e665ab1084137b",
     "skills/devops/selfhosted-service-audit/references/new-service-capacity-assessment.md": "55114e6461da3d3d0b87c7eeac1f8e39847dc55576c16af81effcac2b99d481f",
     "skills/devops/selfhosted-service-audit/references/restic-repo-growth-measurement.md": "fd073cbba1c000c94bf3458d75ce1929e3b79645879e8163fed7a0c8a18895b1",
     "skills/devops/selfhosted-service-audit/references/restic-rest-server-quota-chain.md": "8be4842e09d01d1ba5aa4b97bf79cf17ec68a9712e05da4e58847ec298dee3a5",
@@ -662,7 +663,7 @@
     "skills/messaging/smart-group-bot-ops/scripts/verify_av_proxy.py": "ca9de67d04cde3bb2a48cc39f6bbe85c8d1ed23f05f14220efb029112fb04f69",
     "skills/messaging/smart-group-bot-ops/templates/local-embed-service.py": "6c8c4d8a4f8f5bc97aeb7ab9210af4620a257875da422095e5bbd8e2e0e636d1",
     "skills/messaging/smart-group-bot-ops/templates/sgb-embed.service": "f9c771c634f3b7dd72b14b8a655eb36d589a817c08748af2bdc7ebe06f294787",
-    "skills/messaging/summary/SKILL.md": "e9690e883905cbb6679be2d6e25f086583c149993740671eaa42ab1fc31136d9",
+    "skills/messaging/summary/SKILL.md": "437e4a628084eb754522aa29f8a6380189c91017b35f27844488f8b4e37230d4",
     "skills/messaging/telebox-userbot-ops/SKILL.md": "a19875adae647db7fa7ce4bad23eb459c83435dd71a20660c6292ab44dbb8913",
     "skills/messaging/telegram-ad-moderation-bot-ops/SKILL.md": "27b8dd0a61a8d461c9fac23ffb4e536dfd1f9992ea94a65e211f67ac29f41c9a",
     "skills/messaging/telegram-ad-moderation-bot-ops/references/member-bot-quiet-change.md": "a40a9fa8ed8548147fed2363c06d49f722fd5aeae1aac53a42c56477901a99a9",
@@ -809,6 +810,8 @@
     "skills/networking/instabox-node-ops/scripts/vspider.py": "7f1992b41615006926dc42ad62aa1e542d67f0d74955c28bd5d6768874f4839b",
     "skills/networking/linux-bbr-tuning/SKILL.md": "3782d20065d29db6b361a326d8ec4f4485031e7a96b5f7410f37afe3c11437c6",
     "skills/networking/linux-bbr-tuning/scripts/bbr_audit.sh": "e8430bc8be1f75169b1f69c69b3942882453ce9a365c5669dee12d11d07a0e66",
+    "skills/networking/magpie-gateway-ops/SKILL.md": "46e2423159836a0ea9063513fd23248a4a2ecaa258fe5469a1c2702ea2213273",
+    "skills/networking/magpie-gateway-ops/references/agent-config-rewrite-risk.md": "128757769dedc198c77a440e6773af6541ffbb0290cc763175c2d69491d87c5b",
     "skills/networking/monitor-hub-ops/SKILL.md": "ebf003d34539704bc7921ef23a31f125b3d6abff7807f2ab3a0546f1e992a86e",
     "skills/networking/monitor-hub-ops/references/beszel-deployment.md": "5feab394ee44366dd0b36857f70cb3b0f3e32492a254881e58d5be659b1233a8",
     "skills/networking/monitor-hub-ops/references/komari-deployment.md": "b32c500ddcbfe0f6879909ff8572f93b3b4f159c44a028bec1bcfab934aae3bd",
