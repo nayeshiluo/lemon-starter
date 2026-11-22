@@ -145,12 +145,12 @@ def verify_source(root,expected_hashes):
     actual={}
     for p in root.rglob('*'):
         rel=p.relative_to(root)
-        if any(x in {'.git','.curator_backups','__pycache__','.hub'} for x in rel.parts):continue
+        if any(x in {'.git','.curator_backups','__pycache__','.hub','.archive'} for x in rel.parts):continue
         if p.is_symlink():raise GuardError('source_symlink')
         if not p.is_file():continue
         # 排除集合必须与 candidate_pipeline.SKIP_NAME 保持一致：pipeline 侧排除的文件
         # 若这里仍强制要求存在于 manifest，prepare 会误报 unapproved_source_file。
-        if p.name in {'.curator_state','.bundled_manifest','curator.lock','.usage.json.lock','.usage.json','.webui-managed-skills.json',
+        if p.name in {'.curator_state','.bundled_manifest','curator.lock','.usage.json.lock','.usage.json','.webui-managed-skills.json','.curator_suppressed',
                       'public-skills-publish-pipeline.md'}:continue
         if p.name.endswith(('.bak','.tmp','.log','.pyc')) or re.search(r'\.db(?:\.|$)',p.name):continue
         name='skills/'+rel.as_posix()
