@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "bundle_sha256": "1b73ca6d4360535fe9757afbb1a9264f4309e63338edde81481b68b1ffbb9f65",
+  "bundle_sha256": "4cd5a1a7324681232f2d468784ec9f759f90b11c8fb85ad63274a25ad39f19f9",
   "output_hashes": {
     "skills/apikey-image-gen/SKILL.md": "a853f42c47732c3b0441414497579184fa5a6e2b7ee1e045669ee589955ac215",
     "skills/apple/DESCRIPTION.md": "c9537e578d68950224dbc09a425497a780e8c3956db9cb38a97b4a9e985516b3",
@@ -623,7 +623,7 @@
     "skills/networking/instabox-node-ops/scripts/vspider.py": "7f1992b41615006926dc42ad62aa1e542d67f0d74955c28bd5d6768874f4839b",
     "skills/networking/linux-bbr-tuning/SKILL.md": "3782d20065d29db6b361a326d8ec4f4485031e7a96b5f7410f37afe3c11437c6",
     "skills/networking/linux-bbr-tuning/scripts/bbr_audit.sh": "e8430bc8be1f75169b1f69c69b3942882453ce9a365c5669dee12d11d07a0e66",
-    "skills/networking/magpie-gateway-ops/SKILL.md": "7d6b0a781751dd05e02108337252766f8e62fb74d62eb3698a26a62b1103b919",
+    "skills/networking/magpie-gateway-ops/SKILL.md": "ed24f54c212fe057967e23101f2c8a241e5452841908a87ffd33309173df2ad1",
     "skills/networking/magpie-gateway-ops/references/agent-config-rewrite-risk.md": "c31e84c22ab1cff3149b1bd46c034ef17047aff7802d2acc6c333e8842eada55",
     "skills/networking/magpie-gateway-ops/references/containerized-client-onboarding.md": "57706a54d9c7d7d305386bda708bf6b7b024c61731fd527ac567739c2ccc09c8",
     "skills/networking/magpie-gateway-ops/references/gateway-consolidation-vs-retirement.md": "eb1760ed4e63428dba171681b7c94a8e83d5459f0df3649813c27e6d6aa856d9",
